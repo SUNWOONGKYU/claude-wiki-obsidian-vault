@@ -1,0 +1,65 @@
+# dashboard.base — 슈퍼스킬 표준 템플릿 (v0.2.2)
+#
+# Stage 2 시딩 시 이 템플릿이 <vault>/_meta/dashboard.base 로 박힘.
+# 페르소나(persona.md)의 변수로 치환:
+#   {who_label} · {topic_label} · {folder_who} · {folder_topic}
+#
+# Obsidian Bases 1.x 사양. kepano/obsidian-bases SKILL.md 참조.
+
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'file.folder != "_meta"'
+
+formulas:
+  status_icon: 'if(status == "진행중", "🟢", if(status == "완료", "✅", "⚪"))'
+
+properties:
+  time:
+    displayName: "시점"
+  who:
+    displayName: "{who_label}"
+  topic:
+    displayName: "{topic_label}"
+  kind:
+    displayName: "문서종류"
+  status:
+    displayName: "상태"
+  formula.status_icon:
+    displayName: ""
+
+views:
+  - type: table
+    name: "전체 노트 (4축)"
+    order:
+      - file.name
+      - formula.status_icon
+      - time
+      - who
+      - topic
+      - kind
+      - status
+    groupBy:
+      property: kind
+      direction: ASC
+
+  - type: cards
+    name: "{who_label}별 보기"
+    filters:
+      and:
+        - 'file.inFolder("{folder_who}")'
+    order:
+      - file.name
+      - who
+      - topic
+      - status
+
+  - type: table
+    name: "{topic_label} hub 노트"
+    filters:
+      and:
+        - 'file.inFolder("{folder_topic}")'
+    order:
+      - file.name
+      - topic
+      - kind

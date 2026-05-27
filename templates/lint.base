@@ -1,0 +1,70 @@
+# lint.base — 슈퍼스킬 표준 템플릿 (v0.2.2)
+#
+# Stage 2 시딩 시 이 템플릿이 <vault>/_meta/lint.base 로 박힘.
+# 5규칙 위반·메타데이터 결함·고립 노트 감지용.
+#
+# 4 뷰 제공:
+#   1) stale — 30일+ 미수정
+#   2) 4축 누락 — frontmatter 보강 필요
+#   3) orphan — 백링크 없는 노트
+#   4) summary 부재 — 본문 100B 미만 (5규칙 #4 "요약 1줄" proxy)
+
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'file.folder != "_meta"'
+
+formulas:
+  days_since_update: '(now() - file.mtime).days'
+  has_summary: 'file.size > 100'
+  missing_axis: 'if(time && who && topic && kind, false, true)'
+
+properties:
+  formula.days_since_update:
+    displayName: "미수정(일)"
+  formula.missing_axis:
+    displayName: "4축 누락"
+  formula.has_summary:
+    displayName: "본문 충분"
+
+views:
+  - type: table
+    name: "stale — 30일+ 미수정"
+    filters:
+      and:
+        - 'formula.days_since_update >= 30'
+    order:
+      - file.name
+      - file.mtime
+      - formula.days_since_update
+
+  - type: table
+    name: "4축 누락 — frontmatter 보강 필요"
+    filters:
+      and:
+        - 'formula.missing_axis == true'
+    order:
+      - file.name
+      - file.folder
+      - time
+      - who
+      - topic
+      - kind
+
+  - type: table
+    name: "orphan — 백링크 없는 노트"
+    filters:
+      and:
+        - 'file.backlinks.length == 0'
+    order:
+      - file.name
+      - file.mtime
+
+  - type: table
+    name: "summary 부재 — 본문 100B 미만 (5규칙 #4 proxy)"
+    filters:
+      and:
+        - 'formula.has_summary == false'
+    order:
+      - file.name
+      - file.size
