@@ -85,6 +85,17 @@ if ($VaultPath -and (Test-Path $VaultPath)) {
     if (Test-Path $personaPath) {
         Write-Host "  ✓ _meta/persona.md 존재 — LOAD 모드로 진입" -ForegroundColor Green
         Write-Host "    mode=LOAD" -ForegroundColor Cyan
+        # v0.3 신규: vault_role 추출
+        $personaContent = Get-Content $personaPath -Raw -Encoding UTF8
+        if ($personaContent -match "(?m)^vault_role:\s*(\w+)") {
+            $vrole = $matches[1]
+            Write-Host "    vault_role=$vrole (persona.md에서 로드)" -ForegroundColor Cyan
+            if ($vrole -eq "archive") {
+                Write-Host "    ⚠ archive vault — Stage 3 빌드 차단됨 (T1 '저장해'도 차단)" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "    ℹ vault_role 미명시 — 디폴트 active로 처리" -ForegroundColor Cyan
+        }
     } else {
         # v0.2 신규: CREATE vs ADOPT 분기 — vault 규모 측정
         $reservedFolders = @('.obsidian', '_meta', 'raw', 'wiki', '캔버스', '_WorkLog', '.git', 'node_modules')
@@ -98,11 +109,11 @@ if ($VaultPath -and (Test-Path $VaultPath)) {
         if ($folderCount -ge 3 -or $mdCount -ge 100) {
             Write-Host "  → ADOPT 모드로 진입 (기존 큰 vault 흡수)" -ForegroundColor Yellow
             Write-Host "    mode=ADOPT" -ForegroundColor Cyan
-            Write-Host "    Stage 1에서 질문 5종 + 폴더 매핑 질문 6종 진행 예정" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q5(어휘) + Q6(sensitive) + R1(vault_role) + F1~F6(폴더 매핑)" -ForegroundColor Cyan
         } else {
             Write-Host "  → CREATE 모드로 진입 (신규 vault)" -ForegroundColor Green
             Write-Host "    mode=CREATE" -ForegroundColor Cyan
-            Write-Host "    Stage 1에서 질문 5종 진행 예정" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q5(어휘) + Q6(sensitive) — vault_role=active 디폴트, 폴더 변수 디폴트 사용" -ForegroundColor Cyan
         }
     }
     $consistencyPath = Join-Path $VaultPath "_meta\일관성카드.md"

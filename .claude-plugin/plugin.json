@@ -1,0 +1,35 @@
+{
+  "name": "claude-wiki-obsidian-vault",
+  "version": "0.3.0",
+  "description": "자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수하는 슈퍼스킬. ADOPT 모드로 기존 큰 vault 흡수 + vault_role(active/archive/hybrid)로 vault 성격별 작업 분기. __unmapped__ 키워드로 archive vault 정식 지원. Oh My Wiki 외부 derivative — 하드코딩 4종 페르소나를 vault-embedded 메타 페르소나로 일반화.",
+  "author": {
+    "name": "선웅규 (Sunwoongkyu)",
+    "email": "wksun999@hanmail.net",
+    "url": "https://github.com/SUNWOONGKYU"
+  },
+  "repository": "https://github.com/SUNWOONGKYU/claude-wiki-obsidian-vault",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "llm-wiki",
+    "knowledge-management",
+    "second-brain",
+    "pkm",
+    "vault-bootstrap",
+    "kepano",
+    "korean",
+    "claude-code",
+    "claude-skill",
+    "archive-vault",
+    "adopt-mode",
+    "rag-ready",
+    "oh-my-wiki-derivative"
+  ],
+  "based_on": {
+    "name": "oh-my-wiki",
+    "author": "원성묵 (Seongmuk Won)",
+    "url": "https://github.com/simonsez9510/oh-my-wiki",
+    "license": "MIT",
+    "note": "Oh My Wiki v1.x 5규칙·4축·페르소나 메타 IP를 vault-embedded 메타 페르소나로 일반화하고 ADOPT 모드·6 폴더 변수·vault_role·__unmapped__ 키워드를 추가한 외부 derivative."
+  }
+}

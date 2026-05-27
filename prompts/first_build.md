@@ -1,8 +1,37 @@
 # 1차 빌드 프롬프트 (Stage 3A)
 
 > 이 프롬프트는 `<vault>/{folder_raw}/{프로젝트명}/` 폴더의 원본 자료를 `<vault>/{folder_wiki}/`·`{folder_who}/`·`{folder_topic}/` 안의 위키 노트로 1차 변환할 때 LLM에 주는 지시문.
+
+## 0. 사전 검증 — 1차 빌드 차단 조건 (v0.4 신규)
+
+다음 조건 중 하나라도 충족되면 1차 빌드 **전체 차단** (목적지·원본이 없으면 빌드 의미 없음):
+
+- `folder_raw == __unmapped__` → 스캔할 원본 폴더 없음 → 차단
+- `folder_who == __unmapped__` AND `folder_topic == __unmapped__` → 사례·이론 두 목적지 다 없음 → 차단
+- `vault_role == archive` → archive는 빌드 자체 안 함 → 차단
+
+차단 시 사용자에게 안내:
+```
+이 vault는 1차 빌드 진행 불가:
+- 원인: {차단 조건}
+- 권고: persona.md의 folder_* 변수 또는 vault_role을 점검하세요.
+- archive vault라면 빌드 대신 _meta/lint.base로 점검만 수행 가능.
+```
+
+### 부분 차단 (개별 폴더 unmapped)
+- `folder_raw`가 매핑됐지만 `folder_who: __unmapped__` → 모든 노트를 `folder_topic`으로만 저장
+- 반대로 `folder_topic: __unmapped__` → 모든 노트를 `folder_who`로만 저장
+- `folder_wiki: __unmapped__` → 위키 폴더 통합 저장 안 함 (사례·이론 폴더에 분류만)
 >
-> **v0.2 변수 체계**: 모든 폴더 경로는 `_meta/persona.md`의 6 변수(`folder_who`/`folder_topic`/`folder_wiki`/`folder_canvas`/`folder_phase`/`folder_raw`)에서 치환된다. 디폴트는 `raw`/`wiki`/`사례`/`주제`/`캔버스`/`_WorkLog`.
+> **v0.3 변수 체계**: 모든 폴더 경로는 `_meta/persona.md`의 6 변수(`folder_who`/`folder_topic`/`folder_wiki`/`folder_canvas`/`folder_phase`/`folder_raw`)에서 치환된다. 디폴트는 `사례`/`주제`/`wiki`/`캔버스`/`_WorkLog`/`raw`.
+>
+> **`__unmapped__` 처리 (v0.3 신규)**: 변수 값이 `__unmapped__`이면 그 폴더 관련 작업 전체 건너뜀.
+> - `folder_raw: __unmapped__` → **1차 빌드 자체 건너뜀** (스캔할 raw 자료 없음)
+> - `folder_who: __unmapped__` → 사례 노드 생성 안 함 (이론 노드만)
+> - `folder_topic: __unmapped__` → 이론 노드 생성 안 함 (사례 노드만)
+> - `folder_wiki: __unmapped__` → 위키 폴더 안 박음 (사례/이론 폴더 분류만)
+>
+> **vault_role 처리 (v0.3 신규)**: `vault_role: archive`이면 1차 빌드 자체 차단. 사용자 안내 후 종료.
 
 ## 사전 로드 (반드시)
 
@@ -52,8 +81,10 @@ tags:
 {원본에서 핵심 5~10줄만 발췌. 전문 복사 금지.}
 
 ## 관련
-- [[{folder_topic}/관련 기준 노트]]
-- [[{folder_who}/관련 사례 노트]]
+(아래는 자리표시자가 아닌 *작성 지침*. 실재 노트가 있을 때만 wikilink, 없으면 평문으로.)
+- 실재 노트가 있으면: `[[{folder_topic}/실제 노트명]]` (예: `[[_위키/정당방위_형법21조]]`)
+- 미존재 노트면: 평문 표기 (예: `관련 기준: 정당방위 (관련 노트 작성 예정)`)
+- 절대 금지: `[[{folder_topic}/관련 기준 노트]]` 같은 자리표시자 wikilink — dead-link 생성
 
 ## 미해결
 [확인 필요] {모호한 부분}
