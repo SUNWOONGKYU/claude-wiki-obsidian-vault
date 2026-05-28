@@ -140,20 +140,28 @@ if ($ok) {
         Write-Host "  · $i" -ForegroundColor Red
     }
 
-    # v0.5: 자동 설치 시도
+    # v0.5.1: 자동 설치 시도 (L-1 옵션 전달 + L-2 자기 재호출)
     if (-not $NoAutoInstall) {
         Write-Host ""
-        Write-Host "=== v0.5 자동 설치 시도 ===" -ForegroundColor Cyan
-        Write-Host "install-deps.ps1 호출 — Obsidian(winget) + defuddle(npm) + kepano(git clone)" -ForegroundColor Cyan
+        Write-Host "=== v0.5.1 자동 설치 시도 ===" -ForegroundColor Cyan
         $installScript = Join-Path $PSScriptRoot "install-deps.ps1"
         if (Test-Path $installScript) {
-            & $installScript
+            # L-1: 이미 설치된 의존성은 -Skip 전달 (이미 위에서 $cli, $missing, $defuddle 측정됨)
+            $installArgs = @()
+            if ($missing.Count -eq 0) { $installArgs += '-SkipKepano' }
+            if ($defuddle) { $installArgs += '-SkipDefuddle' }
+            # Obsidian은 vault info 실패해도 Enable CLI 자동 박기 단계 필요 → SkipObsidian 안 줌
+
+            Write-Host "install-deps.ps1 호출 (옵션: $($installArgs -join ' '))" -ForegroundColor Cyan
+            & $installScript @installArgs
             $installExit = $LASTEXITCODE
             Write-Host ""
             if ($installExit -eq 0) {
-                Write-Host "✓ 자동 설치 완료 — healthcheck 재실행 권장" -ForegroundColor Green
-                Write-Host "  pwsh -File `"$($MyInvocation.MyCommand.Path)`" -VaultPath `"$VaultPath`"" -ForegroundColor Cyan
-                exit 0
+                # L-2: 자동 설치 성공 → healthcheck 자기 재호출 (-NoAutoInstall로 무한 재귀 방지)
+                Write-Host "✓ 자동 설치 완료 — healthcheck 자기 재호출 (L-2)" -ForegroundColor Green
+                Write-Host ""
+                & $MyInvocation.MyCommand.Path -VaultPath $VaultPath -NoAutoInstall
+                exit $LASTEXITCODE
             } else {
                 Write-Host "⚠ 자동 설치 일부 실패 — 위 안내대로 수동 처리 후 재실행" -ForegroundColor Yellow
                 exit 1

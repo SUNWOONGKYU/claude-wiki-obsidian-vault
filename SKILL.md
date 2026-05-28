@@ -7,7 +7,7 @@ description: 본인 전용 디렉터·오케스트레이터. 자연어 한 줄�
   "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수" 등을 말할 때 발동.
 metadata:
   type: core
-  version: 0.4.0
+  version: 0.5.1
   created: 2026-05-27
 ---
 
@@ -221,6 +221,16 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 - **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
 
 ## 변경 이력
+
+- **0.5.1 (2026-05-28)** — **다른 Claude Code 외부 검증 8건 fix** (Critical 2 + High 2 + Medium 2 + Low 2):
+  - **C-1 (Critical)**: SKILL.md frontmatter `version: 0.4.0` → `0.5.1` (v0.5.0 미반영분 + 본 패치 동시) + 변경이력 박기
+  - **C-2 (Critical)**: G드라이브 `SAL_Grid_Dev_Suite_Template/.claude/skills/claude-wiki-obsidian-vault-코어4/` 에 v0.5.1 통째 sync (v0.5.0 누락분 포함)
+  - **H-1 (High)**: `install-deps.ps1`에 `obsidian-cli` npm 자동 설치 추가 (`npm install -g obsidian-cli`)
+  - **H-2 (High)**: `install-deps.ps1`에 `codex` npm 자동 설치 추가 (`npm install -g @openai/codex`)
+  - **M-1 (Medium)**: kepano 5종 git clone 후 "Claude Code 재시작 필요" 안내 추가 (신규 스킬 인식 위해)
+  - **M-2 (Medium)**: Obsidian "Enable CLI" 토글 자동 검증·박기 — `%APPDATA%\obsidian\obsidian.json`의 `"cli":true` 직접 편집
+  - **L-1 (Low)**: `healthcheck.ps1` → `install-deps.ps1` 호출 시 `-Skip*`/`-Force` 옵션 전달 (이미 설치된 부분 스킵)
+  - **L-2 (Low)**: 자동 설치 성공 후 `healthcheck.ps1` 자기 재호출 (`-NoAutoInstall`) — 사용자 수동 실행 X
 
 - **0.5.0 (2026-05-28)** — **의존성 자동 설치 박기** (PO 지적 반영):
   - `scripts/install-deps.ps1` 신규 — Obsidian(winget) + defuddle(npm) + kepano 5종(git clone) 자동 시도
