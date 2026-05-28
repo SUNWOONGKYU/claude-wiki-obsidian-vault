@@ -7,7 +7,7 @@ description: 본인 전용 디렉터·오케스트레이터. 자연어 한 줄�
   "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수" 등을 말할 때 발동.
 metadata:
   type: core
-  version: 0.5.1
+  version: 0.5.2
   created: 2026-05-27
 ---
 
@@ -196,7 +196,7 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 
 ## 보호 규칙 (절대 위반 금지)
 
-1. **`{folder_raw}` 원본 미수정** — 1글자도 안 바꿈. wiki·who·topic 본문은 3C 단계 사용자 승인 후 **3종 최소 변형**만.
+1. **`{folder_raw}` 원본 미수정 + 내부 신설 금지** — 1글자도 안 바꿈 + **새 파일·하위 폴더 신설 금지**. `{folder_raw}`는 사용자가 부트스트랩 시점에 박은 *원본 자료만* 들어간다. 외부 자료·시뮬레이션 시드·LLM 산출·메모 등 *어떤 것도* `{folder_raw}` 안에 박지 않는다 — vault 루트의 별도 폴더(예: `external/`, `sim_seed/`, `_outputs/`)에 박는다. wiki·who·topic 본문은 3C 단계 사용자 승인 후 **3종 최소 변형**만.
 2. **자기 검증 금지** — 2차 빌드는 반드시 사용자 승인 후 적용.
 3. **sensitive:true vault** — 클라우드 동기화 금지 경고.
 4. **한글 멀티라인** 파일시스템 직접 쓰기 (`obsidian-cli create` 회피).
@@ -221,6 +221,8 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 - **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
 
 ## 변경 이력
+
+- **0.5.2 (2026-05-28)** — 보호규칙 1 강화: `{folder_raw}` 원본 미수정 *외에도* 내부에 **새 파일·하위 폴더 신설 금지** 명시. 외부 자료·시드·LLM 산출은 vault 루트 별도 폴더로(`external/`, `sim_seed/`, `_outputs/` 등). 원인: BuzzLab for Company vault 시딩 중 LLM이 `raw/external/`, `raw/sim_seed/`를 raw 내부에 박아 PO가 지적 → 재발 차단.
 
 - **0.5.1 (2026-05-28)** — **다른 Claude Code 외부 검증 8건 fix** (Critical 2 + High 2 + Medium 2 + Low 2):
   - **C-1 (Critical)**: SKILL.md frontmatter `version: 0.4.0` → `0.5.1` (v0.5.0 미반영분 + 본 패치 동시) + 변경이력 박기
