@@ -234,7 +234,7 @@
     <rect x="905" y="896" width="14" height="14" fill="#fdf2f8" stroke="#db2777" stroke-dasharray="3,2"/>
     <text x="925" y="908" font-size="10" fill="#334155">L3 외부 (RAG 엔진)</text>
   </g>
-  <text x="50" y="935" font-size="9" font-style="italic" fill="#64748b">호출 단계 표기: T1=캐주얼 / T2=구조화 / T3=RAG-ready / 0~3 = vault 부트스트랩~빌드 단계 (흐름도 v2.1 참조)</text>
+  <text x="50" y="935" font-size="9" font-style="italic" fill="#64748b">호출 단계 표기: T0=Tiny(&lt;10) / T1=캐주얼 / T2=구조화 / T2-A=ADOPT(folder≥3) / T3=RAG-ready / 0~3 = vault 부트스트랩~빌드 단계 (v0.6.0 — 자동 분기)</text>
   <text x="50" y="950" font-size="9" font-style="italic" fill="#64748b">생성: 2026-05-26 14:52  ·  claude-wiki-obsidian-vault-코어4 (산출 = Claude·Wiki·Obsidian Vault, RAG-ready)  ·  llmwiki-obsidian-guide + wiki-e-rag (L1·L2) + oh-my-wiki + kepano 5종</text>
 </g>
   <line x1="40" y1="1050" x2="1360" y2="1050" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="10,6"/>
@@ -252,7 +252,7 @@
 
   <!-- 제목 -->
   <text x="700" y="42" text-anchor="middle" font-size="26" font-weight="800" fill="#0f172a">claude-wiki-obsidian-vault-코어4 — 흐름도 v2.1</text>
-  <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">자연어 한 줄 → 트리거 판단 → 3 트랙 중 자동 선택 → 5종 kepano 도구 호출 → Claude·Wiki·Obsidian Vault 산출 (RAG-ready)</text>
+  <text x="700" y="68" text-anchor="middle" font-size="13" fill="#64748b">자연어 한 줄 → 트리거 판단 → vault 규모로 5 트랙(T0/T1/T2/T2-A/T3) 자동 분기 → 5종 kepano 도구 호출 → Claude·Wiki·Obsidian Vault 산출 (RAG-ready)</text>
 
   <!-- 사용자 트리거 -->
   <g filter="url(#sh)">
@@ -262,25 +262,58 @@
   </g>
   <line x1="700" y1="174" x2="700" y2="208" stroke="#1e3a8a" stroke-width="2" marker-end="url(#aB)"/>
 
-  <!-- 트리거 판단 -->
+  <!-- 트리거 판단 + 5트랙 자동 분기 임계값 표 (v0.6.0) -->
   <g filter="url(#sh)">
-    <rect x="380" y="212" width="640" height="88" rx="12" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
-    <text x="700" y="240" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">슈퍼스킬 트리거 판단</text>
-    <line x1="430" y1="252" x2="970" y2="252" stroke="#3b82f6" stroke-width="1"/>
-    <text x="700" y="272" text-anchor="middle" font-size="11" fill="#bfdbfe">healthcheck — Obsidian CLI · kepano 5종 점검 → vault/_meta/persona.md 존재 검사</text>
-    <text x="700" y="290" text-anchor="middle" font-size="11" fill="#bfdbfe">→ vault 규모(.md 수·폴더 수)로 5 트랙 중 자동 분기 (v0.6.0)</text>
+    <rect x="240" y="212" width="920" height="130" rx="12" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
+    <text x="700" y="234" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">슈퍼스킬 트리거 판단 + 자동 트랙 결정 (v0.6.0)</text>
+    <line x1="290" y1="244" x2="1110" y2="244" stroke="#3b82f6" stroke-width="1"/>
+    <text x="700" y="262" text-anchor="middle" font-size="10" fill="#bfdbfe">healthcheck — Obsidian CLI · kepano 5종 점검 → vault/_meta/persona.md 존재 검사 → 규모 측정(.md 수·폴더 수)</text>
+    <!-- 5트랙 분기 표 -->
+    <rect x="260" y="272" width="880" height="60" rx="6" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1"/>
+    <text x="285" y="290" font-size="10" font-weight="700" fill="#fef3c7">T0 Tiny ✨</text>
+    <text x="285" y="304" font-size="9" fill="#fde68a">.md &lt; 10</text>
+    <text x="285" y="318" font-size="9" fill="#fde68a">folders &lt; 1</text>
+    <text x="285" y="330" font-size="8" fill="#fcd34d">2분 셋업</text>
+    <line x1="380" y1="278" x2="380" y2="328" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="405" y="290" font-size="10" font-weight="700" fill="#fef3c7">T1 Casual</text>
+    <text x="405" y="304" font-size="9" fill="#fde68a">.md 10~30</text>
+    <text x="405" y="318" font-size="9" fill="#fde68a">folders &lt; 3</text>
+    <text x="405" y="330" font-size="8" fill="#fcd34d">5분 셋업</text>
+    <line x1="540" y1="278" x2="540" y2="328" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="570" y="290" font-size="10" font-weight="700" fill="#ddd6fe">T2 Structured</text>
+    <text x="570" y="304" font-size="9" fill="#c4b5fd">.md 30~100</text>
+    <text x="570" y="318" font-size="9" fill="#c4b5fd">folders &lt; 3</text>
+    <text x="570" y="330" font-size="8" fill="#a78bfa">10분 셋업</text>
+    <line x1="715" y1="278" x2="715" y2="328" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="745" y="290" font-size="10" font-weight="700" fill="#ddd6fe">T2 Full</text>
+    <text x="745" y="304" font-size="9" fill="#c4b5fd">.md 100~300</text>
+    <text x="745" y="318" font-size="9" fill="#c4b5fd">folders &lt; 3</text>
+    <text x="745" y="330" font-size="8" fill="#a78bfa">15분 셋업</text>
+    <line x1="875" y1="278" x2="875" y2="328" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="905" y="290" font-size="10" font-weight="700" fill="#fbcfe8">T2-A ADOPT ✨</text>
+    <text x="905" y="304" font-size="9" fill="#f9a8d4">.md ≥ 300</text>
+    <text x="905" y="318" font-size="9" fill="#f9a8d4">OR folders ≥ 3</text>
+    <text x="905" y="330" font-size="8" fill="#f472b6">20~30분</text>
+    <line x1="1035" y1="278" x2="1035" y2="328" stroke="#475569" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="1065" y="290" font-size="10" font-weight="700" fill="#fce7f3">T3 RAG ★</text>
+    <text x="1065" y="304" font-size="9" fill="#fbcfe8">위에 부가</text>
+    <text x="1065" y="318" font-size="9" fill="#fbcfe8">"RAG 준비해"</text>
+    <text x="1065" y="330" font-size="8" fill="#f9a8d4">+10분</text>
   </g>
 
-  <!-- 분기 화살표 -->
-  <line x1="500" y1="300" x2="240" y2="350" stroke="#1e3a8a" stroke-width="2" marker-end="url(#aB)"/>
-  <line x1="700" y1="300" x2="700" y2="350" stroke="#1e3a8a" stroke-width="2" marker-end="url(#aB)"/>
-  <line x1="900" y1="300" x2="1160" y2="350" stroke="#1e3a8a" stroke-width="2" marker-end="url(#aB)"/>
+  <!-- 분기 화살표 — 5트랙으로 분기 -->
+  <line x1="320" y1="342" x2="240" y2="380" stroke="#d97706" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="450" y1="342" x2="430" y2="380" stroke="#d97706" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="660" y1="342" x2="700" y2="380" stroke="#7c3aed" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="950" y1="342" x2="970" y2="380" stroke="#0891b2" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="1085" y1="342" x2="1160" y2="380" stroke="#db2777" stroke-width="2" marker-end="url(#aB)"/>
 
-  <!-- ========== Track 1 ========== -->
+  <!-- ========== Track 1 + T0 Tiny 분기 (v0.6.0) ========== -->
   <g filter="url(#sh)">
     <rect x="40" y="360" width="400" height="58" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
-    <text x="240" y="384" text-anchor="middle" font-size="14" font-weight="800" fill="#78350f">[T1] 캐주얼 트랙</text>
-    <text x="240" y="404" text-anchor="middle" font-size="10" fill="#92400e">"저장해" — 본인 일상 워크플로우</text>
+    <text x="240" y="380" text-anchor="middle" font-size="14" font-weight="800" fill="#78350f">[T1] 캐주얼 트랙</text>
+    <text x="240" y="396" text-anchor="middle" font-size="9" fill="#92400e">"저장해" — 본인 일상 워크플로우</text>
+    <text x="240" y="412" text-anchor="middle" font-size="9" font-weight="700" fill="#b45309">✨ T0 Tiny(.md&lt;10) 자동 분기 → Stage T0-1~T0-4 만 (셋업 2분)</text>
   </g>
 
   <!-- T1 Stage 1 -->
@@ -315,11 +348,12 @@
     <text x="60" y="786" font-size="9" fill="#0891b2">→ obsidian-cli (reload)</text>
   </g>
 
-  <!-- ========== Track 2 ========== -->
+  <!-- ========== Track 2 + T2-A ADOPT 분기 ========== -->
   <g filter="url(#sh)">
     <rect x="500" y="360" width="400" height="58" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-    <text x="700" y="384" text-anchor="middle" font-size="14" font-weight="800" fill="#5b21b6">[T2] 구조화 트랙</text>
-    <text x="700" y="404" text-anchor="middle" font-size="10" fill="#4c1d95">신규 vault 부트스트랩 (페르소나 5규칙)</text>
+    <text x="700" y="380" text-anchor="middle" font-size="14" font-weight="800" fill="#5b21b6">[T2] 구조화 트랙 (Structured / Full)</text>
+    <text x="700" y="396" text-anchor="middle" font-size="9" fill="#4c1d95">신규 vault 부트스트랩 (페르소나 5규칙)</text>
+    <text x="700" y="412" text-anchor="middle" font-size="9" font-weight="700" fill="#0e7490">✨ T2-A ADOPT(folder≥3 OR .md≥300) 분기 → 폴더 매핑 + raw 분리 추가</text>
   </g>
 
   <!-- T2 Stage 1 -->
