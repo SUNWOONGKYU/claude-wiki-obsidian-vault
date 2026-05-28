@@ -83,8 +83,8 @@
     <text x="700" y="398" text-anchor="middle" font-size="22" font-weight="800" fill="#ffffff">claude-wiki-obsidian-vault-코어4</text>
     <text x="700" y="422" text-anchor="middle" font-size="12" fill="#bfdbfe">(슈퍼스킬 · 본인 전용 디렉터·오케스트레이터)</text>
     <line x1="430" y1="438" x2="970" y2="438" stroke="#3b82f6" stroke-width="1"/>
-    <text x="700" y="464" text-anchor="middle" font-size="13" fill="#e0e7ff">3 트랙 — 자동 트리거 판단</text>
-    <text x="700" y="486" text-anchor="middle" font-size="12" fill="#dbeafe">[T1] 캐주얼 "저장해"  ·  [T2] 부트스트랩 (페르소나 vault)  ·  [T3] RAG-ready 셋업</text>
+    <text x="700" y="464" text-anchor="middle" font-size="13" fill="#e0e7ff">5 트랙 — vault 규모로 자동 분기 (v0.6.0)</text>
+    <text x="700" y="486" text-anchor="middle" font-size="11" fill="#dbeafe">[T0 Tiny] &lt;10  ·  [T1] 저장해  ·  [T2/T2-A] 구조화·흡수  ·  [T3] RAG-ready</text>
     <line x1="500" y1="502" x2="900" y2="502" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3,3"/>
     <text x="700" y="524" text-anchor="middle" font-size="11" fill="#dbeafe">공통: 5규칙 + 4축 + persona.md 박기  ·  산출 = Claude·Wiki·Obsidian Vault</text>
     <text x="700" y="544" text-anchor="middle" font-size="11" fill="#dbeafe">PHASE 파일 자동 생성 (_WorkLog/) · 2차 빌드는 사용자 승인 대기</text>
@@ -268,7 +268,7 @@
     <text x="700" y="240" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">슈퍼스킬 트리거 판단</text>
     <line x1="430" y1="252" x2="970" y2="252" stroke="#3b82f6" stroke-width="1"/>
     <text x="700" y="272" text-anchor="middle" font-size="11" fill="#bfdbfe">healthcheck — Obsidian CLI · kepano 5종 점검 → vault/_meta/persona.md 존재 검사</text>
-    <text x="700" y="290" text-anchor="middle" font-size="11" fill="#bfdbfe">→ 호출 의도(저장/부트스트랩/RAG연결)와 vault 상태로 3 트랙 중 자동 분기</text>
+    <text x="700" y="290" text-anchor="middle" font-size="11" fill="#bfdbfe">→ vault 규모(.md 수·폴더 수)로 5 트랙 중 자동 분기 (v0.6.0)</text>
   </g>
 
   <!-- 분기 화살표 -->

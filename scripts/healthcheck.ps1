@@ -97,8 +97,28 @@ if ($VaultPath -and (Test-Path $VaultPath)) {
         } else {
             Write-Host "    ℹ vault_role 미명시 — 디폴트 active로 처리" -ForegroundColor Cyan
         }
+        # v0.6.0: track 추출 + T0 → T2 자동 승급 안내
+        if ($personaContent -match "(?m)^track:\s*(\w+)") {
+            $vtrack = $matches[1]
+            Write-Host "    track=$vtrack (persona.md에서 로드)" -ForegroundColor Cyan
+            # T0 Tiny면 vault 규모 재측정 → 30+ 노트면 승급 안내
+            if ($vtrack -eq "T0_Tiny") {
+                $mdNow = (Get-ChildItem -Path $VaultPath -Filter "*.md" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch "\\\.obsidian\\" } | Measure-Object).Count
+                if ($mdNow -ge 30) {
+                    Write-Host ""
+                    Write-Host "  ℹ T0 Tiny → T2 승급 추천" -ForegroundColor Yellow
+                    Write-Host "    근거: vault가 $mdNow 노트로 성장 (T0 임계 10, 승급 임계 30)" -ForegroundColor Yellow
+                    Write-Host "    추가될 파일: _meta/일관성카드.md + dashboard.base (+ lint.base if 100+)" -ForegroundColor Yellow
+                    Write-Host "    추가 질문: kind_examples · sensitive · vault_role · 폴더 매핑" -ForegroundColor Yellow
+                    Write-Host "    승급 진행: '/claude-wiki-obsidian-vault-코어4 승급' 한 마디" -ForegroundColor Cyan
+                }
+            }
+        } else {
+            Write-Host "    ℹ track 미명시 — T2 호환 모드로 처리" -ForegroundColor Cyan
+        }
     } else {
-        # v0.2 신규: CREATE vs ADOPT 분기 — vault 규모 측정
+        # v0.2: CREATE vs ADOPT 분기 — vault 규모 측정
+        # v0.6.0: 자동 트랙 결정 로직 (T0 Tiny / T1 Casual / T2 Structured / T2 Full / T2-A ADOPT)
         $reservedFolders = @('.obsidian', '_meta', 'raw', 'wiki', '캔버스', '_WorkLog', '.git', 'node_modules')
         $userFolders = Get-ChildItem -Path $VaultPath -Directory -ErrorAction SilentlyContinue | Where-Object { $reservedFolders -notcontains $_.Name }
         $folderCount = ($userFolders | Measure-Object).Count
@@ -106,16 +126,58 @@ if ($VaultPath -and (Test-Path $VaultPath)) {
         $mdCount = ($mdFiles | Measure-Object).Count
         Write-Host "  ℹ _meta/persona.md 부재. vault 규모 측정 중..." -ForegroundColor Cyan
         Write-Host "    사용자 명명 폴더: $folderCount 개 / 마크다운 파일: $mdCount 개" -ForegroundColor Cyan
-        # ADOPT 임계값: 사용자 폴더 >= 3 또는 .md 파일 >= 100
-        if ($folderCount -ge 3 -or $mdCount -ge 100) {
-            Write-Host "  → ADOPT 모드로 진입 (기존 큰 vault 흡수)" -ForegroundColor Yellow
-            Write-Host "    mode=ADOPT" -ForegroundColor Cyan
-            Write-Host "    Stage 1 예정 질문: Q1~Q5(어휘) + Q6(sensitive) + R1(vault_role) + F1~F6(폴더 매핑)" -ForegroundColor Cyan
+
+        # v0.6.0 자동 트랙 결정 (5단계 if/elseif)
+        # 분기 기준:
+        #   T0 Tiny:        .md < 10  & folders < 1
+        #   T1 Casual:      .md 10~30 & folders < 3
+        #   T2 Structured:  .md 30~100 & folders < 3
+        #   T2 Full:        .md 100~300
+        #   T2-A ADOPT:     .md >= 300 OR folders >= 3
+        if ($folderCount -lt 1 -and $mdCount -lt 10) {
+            Write-Host ""
+            Write-Host "  → 자동 트랙: T0 Tiny ✨" -ForegroundColor Green
+            Write-Host "    mode=CREATE / track=T0_Tiny" -ForegroundColor Cyan
+            Write-Host "    근거: .md $mdCount 개 (< 10) — 풀 슈퍼스킬은 과잉 (소 잡는 칼)" -ForegroundColor Cyan
+            Write-Host "    박을 파일: _meta/persona.md 1파일만 (어휘 3종)" -ForegroundColor Cyan
+            Write-Host "    셋업 예상: 2분" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1·Q2·Q3 (3종만) — Q4·Q5·Q6·R1·F1~F6 모두 디폴트" -ForegroundColor Cyan
+        } elseif ($mdCount -lt 30 -and $folderCount -lt 3) {
+            Write-Host ""
+            Write-Host "  → 자동 트랙: T1 Casual" -ForegroundColor Green
+            Write-Host "    mode=CREATE / track=T1_Casual" -ForegroundColor Cyan
+            Write-Host "    근거: .md $mdCount 개 (10~30) — 일관성카드까지만, dashboard·lint 부담" -ForegroundColor Cyan
+            Write-Host "    박을 파일: _meta/persona.md + 일관성카드.md (2파일)" -ForegroundColor Cyan
+            Write-Host "    셋업 예상: 5분" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q5 (어휘 5종) — Q6·R1·F1~F6 디폴트" -ForegroundColor Cyan
+        } elseif ($mdCount -lt 100 -and $folderCount -lt 3) {
+            Write-Host ""
+            Write-Host "  → 자동 트랙: T2 Structured" -ForegroundColor Green
+            Write-Host "    mode=CREATE / track=T2_Structured" -ForegroundColor Cyan
+            Write-Host "    근거: .md $mdCount 개 (30~100) — dashboard 가치 시작, lint는 아직 부담" -ForegroundColor Cyan
+            Write-Host "    박을 파일: _meta/persona.md + 일관성카드.md + dashboard.base (3파일)" -ForegroundColor Cyan
+            Write-Host "    셋업 예상: 10분" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q6 (어휘 5종 + sensitive)" -ForegroundColor Cyan
+        } elseif ($mdCount -lt 300 -and $folderCount -lt 3) {
+            Write-Host ""
+            Write-Host "  → 자동 트랙: T2 Full" -ForegroundColor Green
+            Write-Host "    mode=CREATE / track=T2_Full" -ForegroundColor Cyan
+            Write-Host "    근거: .md $mdCount 개 (100~300) — 풀 set 가치 발휘" -ForegroundColor Cyan
+            Write-Host "    박을 파일: _meta/persona.md + 일관성카드 + dashboard.base + lint.base (4파일)" -ForegroundColor Cyan
+            Write-Host "    셋업 예상: 15분" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q6 (어휘 5종 + sensitive)" -ForegroundColor Cyan
         } else {
-            Write-Host "  → CREATE 모드로 진입 (신규 vault)" -ForegroundColor Green
-            Write-Host "    mode=CREATE" -ForegroundColor Cyan
-            Write-Host "    Stage 1 예정 질문: Q1~Q5(어휘) + Q6(sensitive) — vault_role=active 디폴트, 폴더 변수 디폴트 사용" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "  → 자동 트랙: T2-A ADOPT" -ForegroundColor Yellow
+            Write-Host "    mode=ADOPT / track=T2A_Adopt" -ForegroundColor Cyan
+            Write-Host "    근거: .md $mdCount 개 또는 폴더 $folderCount 개 — 기존 큰 vault 흡수 필요" -ForegroundColor Cyan
+            Write-Host "    박을 파일: _meta/* 4파일 (사용자 콘텐츠 폴더는 미수정)" -ForegroundColor Cyan
+            Write-Host "    셋업 예상: 20~30분" -ForegroundColor Cyan
+            Write-Host "    Stage 1 예정 질문: Q1~Q6 + R1(vault_role) + F1~F6(폴더 매핑)" -ForegroundColor Cyan
         }
+        Write-Host ""
+        Write-Host "  사용자 오버라이드:" -ForegroundColor DarkGray
+        Write-Host "    다른 트랙 원하면 SKILL 진입 시 명시. 예: '/claude-wiki-obsidian-vault-코어4 T2 강제'" -ForegroundColor DarkGray
     }
     $consistencyPath = Join-Path $VaultPath "_meta\일관성카드.md"
     if (-not (Test-Path $consistencyPath)) {

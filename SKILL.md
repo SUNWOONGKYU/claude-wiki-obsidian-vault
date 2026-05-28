@@ -1,13 +1,14 @@
 ---
 name: claude-wiki-obsidian-vault-코어4
 description: 본인 전용 디렉터·오케스트레이터. 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수한다.
-  3 모드(CREATE / LOAD / ADOPT) × 4 트랙(T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active / archive / hybrid).
+  3 모드(CREATE / LOAD / ADOPT) × 5 트랙(T0 Tiny / T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active / archive / hybrid).
+  v0.6.0부터 healthcheck.ps1이 vault 규모(.md 수·폴더 수)를 측정해 트랙을 자동 결정·추천 — 작은 vault(< 10 .md)는 T0 Tiny로 분기.
   페르소나·일관성 카드·1·2차 빌드를 수행하고, kepano 5종(obsidian-markdown/bases/cli, json-canvas, defuddle)을 도구로 호출.
   사용자가 "저장해", "vault 만들어", "위키 부트스트랩", "페르소나 박아", "이 vault에 페르소나 박아",
-  "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수" 등을 말할 때 발동.
+  "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수", "승급" 등을 말할 때 발동.
 metadata:
   type: core
-  version: 0.5.2
+  version: 0.6.0
   created: 2026-05-27
 ---
 
@@ -15,7 +16,13 @@ metadata:
 
 본인이 다양한 직무·프로젝트에서 사용하는 **Claude·Wiki·Obsidian Vault**를 자연어 한 줄로 생성·갱신·흡수하는 슈퍼스킬. 페르소나는 vault에 박힌다(`_meta/persona.md`) — 하드코딩 4종은 없다.
 
-**v0.3.0 핵심 변화** (원성묵 원장 외부 검증 반영):
+**v0.6.0 핵심 변화** (PO 결정 "자동으로 분기" 2026-05-29):
+- **T0 Tiny 트랙 신설** — 작은 vault(< 10 .md, 0~1 폴더) 전용 최소 트랙. persona.md 1파일만 박음. 셋업 2분.
+- **자동 트랙 결정** — healthcheck.ps1이 vault 규모를 측정해 T0 / T1 / T2 Structured / T2 Full / T2-A를 자동 추천. 사용자가 매번 분기 선택 X.
+- **T0 → T2 자동 승급 안내** — vault가 30+ 노트로 성장하면 LOAD 모드에서 자동 안내.
+- **"소 잡는 칼" 문제 해소** — 작은 vault에 풀 슈퍼스킬 강제 적용을 방지.
+
+**v0.3.0 기반** (원성묵 원장 외부 검증 반영):
 - **vault_role** 옵션 (`active` / `archive` / `hybrid`) — vault 성격에 맞춰 작업 자동 분기
 - **`__unmapped__` 키워드** — 폴더 변수 값으로 박으면 그 폴더 작업 자체를 건너뜀 (archive vault용)
 - **변수 치환 규칙** 본문 명시 (기존엔 변경이력에만 있었음)
@@ -66,32 +73,48 @@ metadata:
 - 신설하지 않음, 읽지 않음, 빌드하지 않음
 - archive vault에서 유용 (예: `folder_wiki: __unmapped__` — 위키 빌드 자체 건너뜀)
 
-## Stage 0 — 진입 모드 감지 (healthcheck + v0.5 자동 설치)
+## Stage 0 — 진입 모드 감지 + 자동 트랙 결정 (healthcheck + v0.5 자동 설치 + v0.6 자동 분기)
 
 1. `scripts/healthcheck.ps1` 실행 — Obsidian CLI 활성, kepano 5종, defuddle 확인
-   - **v0.5 신규**: 의존성 부족 시 `scripts/install-deps.ps1` 자동 호출
-     - Obsidian: `winget install Obsidian.Obsidian` 자동 (실패 시 다운로드 URL 안내)
-     - defuddle: `npm install -g defuddle` 자동
-     - kepano 5종: `git clone https://github.com/kepano/obsidian-skills` 후 `~/.claude/skills/` 복사 (실패 시 슬래시 명령 안내)
+   - **v0.5**: 의존성 부족 시 `scripts/install-deps.ps1` 자동 호출 (winget·npm·git clone)
    - 자동 설치 후 healthcheck 재실행. `-NoAutoInstall` 플래그로 비활성 가능.
 2. 작업 대상 vault 경로 결정 (사용자 메시지에 없으면 질문)
 3. **vault 상태 3분기 검사**:
    - `_meta/persona.md` **존재** → **LOAD** 모드
-   - 부재 + vault 거의 비어있음 (사용자 파일 ≤ 10) → **CREATE** 모드
-   - 부재 + 기존 폴더·파일 다수 (≥3 폴더 OR ≥100 .md) → **ADOPT** 모드
-4. **vault_role 추정** (v0.3 신규):
-   - LOAD 모드 → persona.md frontmatter의 `vault_role` 값 로드
-   - CREATE 모드 → 디폴트 `active`
-   - ADOPT 모드 → 사용자에게 질문 ("이 vault는 active 작업 중인가요, archive 보관소인가요, hybrid?")
-5. 호출 의도 + vault 상태로 트랙 자동 분기:
-   - `저장해` 류 → **T1 캐주얼**
-   - `vault 만들어` / CREATE 모드 → **T2 구조화**
-   - `이 vault에 페르소나 박아` / ADOPT 모드 → **T2-A 흡수**
-   - `archive vault 흡수` → T2-A + vault_role=archive 강제
-   - `RAG 준비해` → **T3 RAG-ready**
-6. PHASE 파일 생성: `{folder_phase}/YYYY_MM_DD__HH.MM_PHASE_{vault명}_부트스트랩.md` (folder_phase가 `__unmapped__`면 건너뜀)
+   - 부재 + vault 거의 비어있음 → **CREATE** 모드
+   - 부재 + 기존 폴더·파일 다수 → **ADOPT** 모드
+4. **v0.6.0 자동 트랙 결정** — healthcheck.ps1이 vault 규모(`.md` 수·사용자 폴더 수)를 측정해 트랙 추천:
 
-## Stage 1 — 페르소나 (CREATE / LOAD / ADOPT)
+   | 측정값 | 자동 트랙 | 모드 | 박는 파일 | 셋업 |
+   |---|---|---|---|---|
+   | `.md < 10` & `folders < 1` | **T0 Tiny** ✨ | CREATE | persona.md 1파일 | 2분 |
+   | `.md 10~30` & `folders < 3` | T1 Casual | CREATE | persona + 일관성카드 | 5분 |
+   | `.md 30~100` & `folders < 3` | T2 Structured | CREATE | + dashboard.base | 10분 |
+   | `.md 100~300` & `folders < 3` | T2 Full | CREATE | + lint.base | 15분 |
+   | `.md ≥ 300` OR `folders ≥ 3` | T2-A ADOPT | ADOPT | 4파일 + 폴더 매핑 | 20~30분 |
+
+   사용자 오버라이드: `/claude-wiki-obsidian-vault-코어4 T2 강제` 같이 명시하면 자동 추천 무시.
+
+5. **호출 의도 우선순위 (자동 트랙 위에 덮어쓰기)**:
+   - `저장해` 류 → **T1 캐주얼** 강제
+   - `archive vault 흡수` → T2-A + vault_role=archive 강제
+   - `RAG 준비해` → **T3 RAG-ready** 강제
+   - `승급` (LOAD + T0_Tiny 상태에서만) → T0 → T2 승급 절차
+   - 명시 트리거 없으면 자동 추천 트랙 사용
+
+6. **vault_role 추정** (v0.3):
+   - LOAD 모드 → persona.md frontmatter의 `vault_role` 값 로드
+   - T0 Tiny·T1·T2 CREATE 모드 → 디폴트 `active`
+   - T2-A ADOPT 모드 → 사용자에게 R1 질문
+
+7. **T0 → T2 자동 승급 안내** (v0.6.0): LOAD + `track: T0_Tiny` + `.md ≥ 30`이면 healthcheck.ps1이 자동 안내 출력. 사용자가 *"승급"* 한 마디 하면 T0 → T2 승급 절차 진입.
+
+8. PHASE 파일 생성: `{folder_phase}/YYYY_MM_DD__HH.MM_PHASE_{vault명}_부트스트랩.md` (T0 Tiny에서는 PHASE 파일 생략 — 셋업 4단계뿐이라 불필요)
+
+## Stage 1 — 페르소나 (T0 Tiny / CREATE / LOAD / ADOPT)
+
+### T0 Tiny 분기 — 작은 vault (v0.6.0 신규)
+**질문 3종만** (Q1·Q2·Q3). Q4·Q5·Q6·R1·F1~F6 모두 디폴트. `templates/persona_meta_tiny.md` 사용. 결과 `_meta/persona.md`의 frontmatter에 `track: T0_Tiny` 박힘.
 
 ### CREATE 분기 — 신규 vault
 질문 5종 + 보조 1종 (sensitive). 폴더 변수 6종은 디폴트 사용.
@@ -144,6 +167,13 @@ vault_role=archive는 Stage 3 자체를 건너뜀 (archive는 빌드 안 함).
 
 ## 트랙별 단축 진입
 
+### T0 — Tiny (v0.6.0 신규, 자동 추천 .md < 10)
+Stage 0(CREATE) → 1(T0 Tiny: Q1·Q2·Q3 3종) → `prompts/t0_tiny_build.md` 4단계 → 완료.
+- 박는 것: `_meta/persona.md` 1파일 + 기존 .md에 frontmatter 보강
+- 안 박는 것: 일관성카드·dashboard·lint·raw 폴더
+- 셋업 시간: 2분
+- vault가 30+ 노트로 자라면 LOAD 모드에서 T2 승급 자동 안내
+
 ### T1 — 캐주얼 "저장해" (active·hybrid)
 Stage 0(LOAD) → frontmatter 박기 → `{folder_raw}/{프로젝트명}/...` 저장 → reload.
 `vault_role=archive`면 T1 자체 차단 (archive 정신 위배). 사용자에게 안내: "archive vault에는 저장 안 합니다. 활성 vault 사용하세요."
@@ -151,11 +181,20 @@ Stage 0(LOAD) → frontmatter 박기 → `{folder_raw}/{프로젝트명}/...` �
 ### T2 — 구조화 부트스트랩 (CREATE 모드 전용)
 Stage 0 → 1(CREATE) → 2 → 3 전체.
 
-### T2-A — 흡수 (ADOPT 모드, v0.2 신규)
+### T2-A — 흡수 (ADOPT 모드, v0.2)
 Stage 0 → 1(ADOPT, 폴더 매핑·vault_role 질문) → 2(메타만 + 매핑된 폴더만) → (Stage 3는 active만).
 
 ### T3 — RAG-ready 셋업
 Stage 0 → 1 → 2(+ wiki-first.base) → 3.
+
+### T0 → T2 승급 절차 (v0.6.0 신규)
+LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 안내. 사용자가 *"승급"* 한 마디:
+1. 기존 `_meta/persona.md`의 `track: T0_Tiny` → `T2_Structured` 변경
+2. 추가 질문 4개 (kind_examples·sensitive·vault_role·폴더 매핑)
+3. `_meta/일관성카드.md` + `dashboard.base` + (필요 시 `lint.base`) 신설
+4. Stage 3 1·2차 빌드 절차로 이관 가능
+
+승급 시간: 약 10분.
 
 ## kepano 5종 호출 매트릭스
 
@@ -179,11 +218,14 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 | SKILL.md 본문 항목 | 동시 갱신 필요 부속 파일 |
 |---|---|
 | Stage 0 모드 분기 (CREATE/LOAD/ADOPT/vault_role) | `scripts/healthcheck.ps1` 감지 로직 |
+| Stage 0 자동 트랙 결정 (v0.6.0 신규) | `scripts/healthcheck.ps1` 5단계 if/elseif + T0→T2 승급 안내 |
 | Stage 1 질문 시퀀스 (Q1~Q6 + F1~F6 + vault_role) | `templates/persona_meta.md` |
-| 폴더 변수 정의·디폴트 | `templates/persona_meta.md` frontmatter + `templates/일관성카드.md` 보호규칙 + `templates/dashboard.base`·`templates/lint.base` displayName |
-| 1차 빌드 절차 (3A) | `prompts/first_build.md` |
+| Stage 1 T0 질문 시퀀스 (Q1·Q2·Q3 3종) | `templates/persona_meta_tiny.md` |
+| 폴더 변수 정의·디폴트 | `templates/persona_meta.md` frontmatter + `templates/persona_meta_tiny.md` 디폴트 + `templates/일관성카드.md` 보호규칙 + `templates/dashboard.base`·`templates/lint.base` displayName |
+| 1차 빌드 절차 (3A) — T1~T3 | `prompts/first_build.md` |
+| T0 Tiny 빌드 절차 (4단계) | `prompts/t0_tiny_build.md` |
 | 2차 빌드 절차 (3B·3C) | `prompts/second_build.md` |
-| 보호규칙 (raw 미수정·3종 변형 면제 등) | `templates/일관성카드.md` 보호규칙 + `prompts/second_build.md` 면제 조항 |
+| 보호규칙 (raw 미수정·3종 변형 면제 등) | `templates/일관성카드.md` 보호규칙 + `prompts/second_build.md` 면제 조항 + `prompts/t0_tiny_build.md` T0 전용 규칙 |
 | vault reload 명령 | `scripts/postsetup_refresh.ps1` |
 
 **자기점검 절차** (본문 변경 LLM 의무):
@@ -221,6 +263,15 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 - **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
 
 ## 변경 이력
+
+- **0.6.0 (2026-05-29)** — **자동 트랙 분기 + T0 Tiny 신설** (PO 결정 "자동으로 분기"):
+  - **T0 Tiny 트랙 신설** — 작은 vault(`.md < 10` & `folders < 1`) 전용. `_meta/persona.md` 1파일만 박음, 셋업 2분.
+  - **healthcheck.ps1 자동 트랙 결정 로직** — vault 규모 측정해 T0/T1/T2 Structured/T2 Full/T2-A 자동 추천 (5단계 if/elseif). 사용자 오버라이드 가능.
+  - **T0 → T2 자동 승급 안내** — LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30`이면 healthcheck가 승급 추천 출력. *"승급"* 한 마디로 진행.
+  - **신규 부속파일**: `templates/persona_meta_tiny.md` (Q1·Q2·Q3 3종) + `prompts/t0_tiny_build.md` (4단계 빌드).
+  - **본문 ↔ 부속파일 정합성 체크리스트 갱신** — T0 관련 항목 4개 추가.
+  - **트리거 추가**: "승급" (LOAD + T0 상태에서만).
+  - **Why**: 작은 vault에 풀 슈퍼스킬 적용 = "소 잡는 칼" 문제. 셋업 30~60분 vs 산출 가치 비용 역전. 자동 분기로 사용자 의사결정 부담 없이 적합 트랙 진입.
 
 - **0.5.2 (2026-05-28)** — 보호규칙 1 강화: `{folder_raw}` 원본 미수정 *외에도* 내부에 **새 파일·하위 폴더 신설 금지** 명시. 외부 자료·시드·LLM 산출은 vault 루트 별도 폴더로(`external/`, `sim_seed/`, `_outputs/` 등). 원인: BuzzLab for Company vault 시딩 중 LLM이 `raw/external/`, `raw/sim_seed/`를 raw 내부에 박아 PO가 지적 → 재발 차단.
 
