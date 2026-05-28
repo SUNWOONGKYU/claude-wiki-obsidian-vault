@@ -66,9 +66,14 @@ metadata:
 - 신설하지 않음, 읽지 않음, 빌드하지 않음
 - archive vault에서 유용 (예: `folder_wiki: __unmapped__` — 위키 빌드 자체 건너뜀)
 
-## Stage 0 — 진입 모드 감지 (healthcheck)
+## Stage 0 — 진입 모드 감지 (healthcheck + v0.5 자동 설치)
 
-1. `scripts/healthcheck.ps1` 실행 — Obsidian CLI 활성, kepano 5종 확인
+1. `scripts/healthcheck.ps1` 실행 — Obsidian CLI 활성, kepano 5종, defuddle 확인
+   - **v0.5 신규**: 의존성 부족 시 `scripts/install-deps.ps1` 자동 호출
+     - Obsidian: `winget install Obsidian.Obsidian` 자동 (실패 시 다운로드 URL 안내)
+     - defuddle: `npm install -g defuddle` 자동
+     - kepano 5종: `git clone https://github.com/kepano/obsidian-skills` 후 `~/.claude/skills/` 복사 (실패 시 슬래시 명령 안내)
+   - 자동 설치 후 healthcheck 재실행. `-NoAutoInstall` 플래그로 비활성 가능.
 2. 작업 대상 vault 경로 결정 (사용자 메시지에 없으면 질문)
 3. **vault 상태 3분기 검사**:
    - `_meta/persona.md` **존재** → **LOAD** 모드
@@ -216,6 +221,12 @@ Stage 0 → 1 → 2(+ wiki-first.base) → 3.
 - **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
 
 ## 변경 이력
+
+- **0.5.0 (2026-05-28)** — **의존성 자동 설치 박기** (PO 지적 반영):
+  - `scripts/install-deps.ps1` 신규 — Obsidian(winget) + defuddle(npm) + kepano 5종(git clone) 자동 시도
+  - `scripts/healthcheck.ps1` 보강 — 실패 시 install-deps 자동 호출 (`-NoAutoInstall`로 비활성)
+  - SKILL.md Stage 0 본문 갱신 — 자동 설치 단계 명시
+  - **Why**: v0.4까지는 의존성 부족 시 수동 안내만 — PO가 매번 수동 처리 부담. v0.5는 winget/npm/git 자동 시도 + 실패 시만 수동 안내.
 
 - **0.4.0 (2026-05-28)** — Codex(GPT) 외부 검증 88/100 반영. v0.3.0 자기모순·미완 5건 해소:
   - **High-1 해소**: `first_build.md` `## 관련` 자리표시자 wikilink 예시 제거 — 같은 파일의 "자리표시자 금지" 규칙과 자기모순이었음

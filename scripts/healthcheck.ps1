@@ -13,7 +13,8 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$VaultPath = ""
+    [string]$VaultPath = "",
+    [switch]$NoAutoInstall  # v0.5: 자동 설치 비활성화 (기본은 자동 시도)
 )
 
 $ErrorActionPreference = "Continue"
@@ -134,9 +135,33 @@ if ($ok) {
     Write-Host "✓ healthcheck 통과 — 스킬 진입 가능" -ForegroundColor Green
     exit 0
 } else {
-    Write-Host "✗ healthcheck 실패 — 다음 이슈 해결 필요:" -ForegroundColor Red
+    Write-Host "✗ healthcheck 실패 — 다음 이슈 발견:" -ForegroundColor Red
     foreach ($i in $issues) {
         Write-Host "  · $i" -ForegroundColor Red
+    }
+
+    # v0.5: 자동 설치 시도
+    if (-not $NoAutoInstall) {
+        Write-Host ""
+        Write-Host "=== v0.5 자동 설치 시도 ===" -ForegroundColor Cyan
+        Write-Host "install-deps.ps1 호출 — Obsidian(winget) + defuddle(npm) + kepano(git clone)" -ForegroundColor Cyan
+        $installScript = Join-Path $PSScriptRoot "install-deps.ps1"
+        if (Test-Path $installScript) {
+            & $installScript
+            $installExit = $LASTEXITCODE
+            Write-Host ""
+            if ($installExit -eq 0) {
+                Write-Host "✓ 자동 설치 완료 — healthcheck 재실행 권장" -ForegroundColor Green
+                Write-Host "  pwsh -File `"$($MyInvocation.MyCommand.Path)`" -VaultPath `"$VaultPath`"" -ForegroundColor Cyan
+                exit 0
+            } else {
+                Write-Host "⚠ 자동 설치 일부 실패 — 위 안내대로 수동 처리 후 재실행" -ForegroundColor Yellow
+                exit 1
+            }
+        } else {
+            Write-Host "✗ install-deps.ps1 부재 — 수동 설치 필요" -ForegroundColor Red
+            exit 1
+        }
     }
     exit 1
 }
