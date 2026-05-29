@@ -1,5 +1,7 @@
 # claude-wiki-obsidian-vault
 
+> **★ 별칭: 옵신 (지식의 신) ★** — `"옵신"` / `"옵신아"` 한 마디로 호출. 형제 별칭: 에신(에이전트의 신).
+
 자연어 한 줄로 **Claude·Wiki·Obsidian Vault**를 생성·갱신·흡수하는 Claude Code 슈퍼스킬.
 
 - **3 모드**: CREATE (신규) / LOAD (기존) / **ADOPT (큰 vault 흡수)**

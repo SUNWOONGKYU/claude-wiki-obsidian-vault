@@ -1,5 +1,6 @@
 {
-  "name": "claude-wiki-obsidian-vault",
+  "name": "옵신-claude-wiki-obsidian-vault",
+  "alias": "옵신",
   "owner": {
     "name": "선웅규 (Sunwoongkyu)",
     "email": "wksun999@hanmail.net",
@@ -7,10 +8,11 @@
   },
   "plugins": [
     {
-      "name": "claude-wiki-obsidian-vault",
+      "name": "옵신-claude-wiki-obsidian-vault",
+      "alias": "옵신",
       "source": "./",
-      "description": "자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수. 3 모드(CREATE/LOAD/ADOPT) × 5 트랙(T0 Tiny / T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active/archive/hybrid). v0.6.0부터 healthcheck.ps1이 vault 규모를 측정해 트랙을 자동 결정·추천 — 작은 vault(< 10 .md)는 T0 Tiny로 분기. 페르소나·일관성 카드·1·2차 빌드를 수행하고, kepano 5종(markdown/bases/canvas/cli/defuddle) 도구 호출. Oh My Wiki 외부 derivative — vault-embedded 메타 페르소나로 일반화.",
-      "version": "0.6.0"
+      "description": "★ 별칭 옵신 (지식의 신) ★ 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수. 3 모드(CREATE/LOAD/ADOPT) × 5 트랙(T0 Tiny / T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active/archive/hybrid). v0.6.0부터 healthcheck.ps1이 vault 규모를 측정해 트랙을 자동 결정·추천 — 작은 vault(< 10 .md)는 T0 Tiny로 분기. 페르소나·일관성 카드·1·2차 빌드를 수행하고, kepano 5종(markdown/bases/canvas/cli/defuddle) 도구 호출. Oh My Wiki 외부 derivative — vault-embedded 메타 페르소나로 일반화.",
+      "version": "0.6.1"
     }
   ]
 }

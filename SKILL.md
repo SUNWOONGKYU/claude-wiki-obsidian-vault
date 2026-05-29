@@ -1,15 +1,16 @@
 ---
-name: claude-wiki-obsidian-vault-코어4
-description: 본인 전용 디렉터·오케스트레이터. 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수한다.
+name: 옵신-claude-wiki-obsidian-vault
+description: ★ 별칭 옵신 (지식의 신) ★ 본인 전용 디렉터·오케스트레이터. 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수한다.
   3 모드(CREATE / LOAD / ADOPT) × 5 트랙(T0 Tiny / T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active / archive / hybrid).
   v0.6.0부터 healthcheck.ps1이 vault 규모(.md 수·폴더 수)를 측정해 트랙을 자동 결정·추천 — 작은 vault(< 10 .md)는 T0 Tiny로 분기.
   페르소나·일관성 카드·1·2차 빌드를 수행하고, kepano 5종(obsidian-markdown/bases/cli, json-canvas, defuddle)을 도구로 호출.
-  사용자가 "저장해", "vault 만들어", "위키 부트스트랩", "페르소나 박아", "이 vault에 페르소나 박아",
+  사용자가 "옵신", "옵신아", "저장해", "vault 만들어", "위키 부트스트랩", "페르소나 박아", "이 vault에 페르소나 박아",
   "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수", "승급" 등을 말할 때 발동.
 metadata:
   type: core
-  version: 0.6.0
+  version: 0.6.1
   created: 2026-05-27
+  alias: 옵신
 ---
 
 # claude-wiki-obsidian-vault-코어4
@@ -263,6 +264,15 @@ LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 �
 - **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
 
 ## 변경 이력
+
+- **0.6.1 (2026-05-29)** — **별칭 "옵신 (지식의 신)" 정식 부여** (PO 결정 — 별칭 시스템 정합):
+  - SKILL.md `name` 필드 `claude-wiki-obsidian-vault-코어4` → `옵신-claude-wiki-obsidian-vault`
+  - `description` 맨 앞에 "★ 별칭 옵신 (지식의 신) ★" 박음
+  - 트리거 어휘에 "옵신", "옵신아" 추가
+  - `metadata.alias: 옵신` 박음
+  - 폴더명도 동일 리네임 (`코어4` 접미 제거 + `옵신-` 접두 추가)
+  - 형제 별칭: 에신(에이전트의 신) — `에신-llm-dependent-agent-create` (skill-create-코어5 형제 공장)
+  - **Why**: 4 사신(청룡·백호·주작·현무) 외에 본 슈퍼스킬과 에신을 *신적 별칭 시스템*에 정식 편입. 사용자가 짧은 별칭("옵신아")으로 호출 가능. PO가 다른 Claude Code 세션에서 G드라이브 백업에 먼저 박은 변경을 활성·GitHub에 풀 정합.
 
 - **0.6.0 (2026-05-29)** — **자동 트랙 분기 + T0 Tiny 신설** (PO 결정 "자동으로 분기"):
   - **T0 Tiny 트랙 신설** — 작은 vault(`.md < 10` & `folders < 1`) 전용. `_meta/persona.md` 1파일만 박음, 셋업 2분.
