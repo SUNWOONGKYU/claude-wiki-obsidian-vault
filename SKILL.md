@@ -65,7 +65,7 @@ metadata:
 | `folder_who` | `사례/` | `직능분석/에이전트` 등 다단계 | 사례 작업 건너뜀 |
 | `folder_topic` | `주제/` | `_위키` 등 | 주제 작업 건너뜀 |
 | `folder_wiki` | `wiki/` | `_위키` | wiki 빌드 건너뜀 |
-| `folder_canvas` | `캔버스/` | `직능분석/sunmyung-ax-diagram` | canvas 박지 않음 |
+| `folder_canvas` | `캔버스/` | `{본인_프로젝트}/diagram` 등 | canvas 박지 않음 |
 | `folder_phase` | `_WorkLog/` | `직능분석/_WorkLog` | PHASE 파일 안 박음 |
 | `folder_raw` | `raw/` | `archive` 등 | raw 빌드 건너뜀 |
 
@@ -255,8 +255,8 @@ LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 �
 ## 출처
 
 - Oh My Wiki (5규칙·4축·페르소나 메타): https://github.com/simonsez9510/oh-my-wiki
-- 본인 운영 패턴: G:\내 드라이브\Claude-Wiki\llmwiki-obsidian-guide
-- wiki-e-rag (L1·L2): G:\내 드라이브\mychatbot-world\docs\wiki-e-rag
+- 본인 운영 패턴: 사용자의 Obsidian Vault 디렉터리 (예: `{사용자_드라이브}/Claude-Wiki/llmwiki-obsidian-guide` 형태로 본인 환경에 매핑)
+- wiki-e-rag (L1·L2): RAG-ready Obsidian Vault 트랙 — 사용자 프로젝트 docs/ 또는 별도 vault 폴더에 구축
 - kepano 5종: https://github.com/kepano/obsidian-skills
 - 통합 다이어그램: https://claude-wiki-obsidian-vault-diagrams.vercel.app/
 - 본 스킬 폴더 다이어그램: `claude-wiki-obsidian-vault-architecture.svg`
@@ -316,5 +316,5 @@ LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 �
   - 보호규칙 10·11·12 추가
 - 0.2.2 (2026-05-27) — templates/dashboard.base + templates/lint.base 정식 템플릿화
 - 0.2.1 (2026-05-27) — healthcheck ADOPT 감지 + 위성 5문서 변수화
-- 0.2.0 (2026-05-27) — ADOPT 모드 + T2-A 트랙 + 폴더 변수 6종 (선명AX 분석)
+- 0.2.0 (2026-05-27) — ADOPT 모드 + T2-A 트랙 + 폴더 변수 6종 (사용자 실 vault 분석 사례 반영)
 - 0.1.0 (2026-05-27) — 초기 작성 (SVG v2.1.1 + 검증 100점)
