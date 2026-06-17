@@ -8,7 +8,7 @@ description: ★ 별칭 옵신 (지식의 신) ★ 본인 전용 디렉터·오�
   "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수", "승급" 등을 말할 때 발동.
 metadata:
   type: core
-  version: 0.6.1
+  version: 0.6.2
   created: 2026-05-27
   alias: 옵신
 ---
@@ -164,6 +164,9 @@ vault_role=archive는 Stage 3 자체를 건너뜀 (archive는 빌드 안 함).
 ### 3C — 적용
 승인 받으면 `obsidian-cli rename` + `property:set` + wikilink 교정.
 
+### 3D — 빌드 후 자가측정 (수렴 루프)
+3C 적용 후 `healthcheck.ps1`로 ① frontmatter 누락 .md 수 ② orphan(역링크 0) 수 ③ `[확인 필요]` 마커 잔존 수를 *자동 측정*한다. ①+②+③ 합이 임계(기본 5) 초과면 — 부족 항목만 골라 **3A로 재진입**(→ 3B 승인 게이트 → 3C). 최대 2회 후에도 초과면 잔존 목록을 사용자에게 보고하고 정지(무한루프 방지). *측정·재빌드 후보 산출은 자동이되, 본문 변형의 최종 적용은 보호규칙 2대로 사용자 승인 후.*
+
 > **본문 변형 면제 조항**: 보호규칙 1(`{folder_raw}` 미수정)은 `{folder_raw}` 폴더만 적용된다. `{folder_wiki}`·`{folder_who}`·`{folder_topic}` 본문은 사용자 승인 후 **3종 최소 변형**만 허용 — ① 첫 줄 요약 삽입 ② 역방향 wikilink 줄 제거 ③ `[확인 필요]` 마커 추가.
 
 ## 트랙별 단축 진입
@@ -265,6 +268,7 @@ LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 �
 
 ## 변경 이력
 
+- **0.6.2 (2026-06-17)** — **Stage 3D 자가측정 수렴 루프 신설** (자율 루프 보강): 3C 적용 후 healthcheck로 frontmatter 누락·orphan·`[확인 필요]` 잔존을 자동 측정 → 임계 초과 시 부족 항목만 3A 재진입(최대 2회) → 수렴/정지. 측정은 자동, 최종 적용은 보호규칙 2(승인 게이트) 유지.
 - **0.6.1 (2026-05-29)** — **별칭 "옵신 (지식의 신)" 정식 부여** (PO 결정 — 별칭 시스템 정합):
   - SKILL.md `name` 필드 `claude-wiki-obsidian-vault-코어4` → `옵신-claude-wiki-obsidian-vault`
   - `description` 맨 앞에 "★ 별칭 옵신 (지식의 신) ★" 박음
