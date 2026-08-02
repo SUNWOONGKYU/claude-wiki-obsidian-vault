@@ -54,7 +54,7 @@ RAG 준비해                → T3 RAG-ready 셋업
 
 ## 의존성
 
-- **Obsidian 1.12.7+** — Settings → General → Advanced → "Enable CLI"
+- **Obsidian 1.12.7+** — Settings → General → **Command line interface** 활성화 ([공식 안내](https://obsidian.md/help/cli), 1.12 인스톨러 필요)
 - **kepano 5종 스킬**: `obsidian-markdown` · `obsidian-bases` · `json-canvas` · `obsidian-cli` · `defuddle`
 - PowerShell (scripts/ 실행)
 - T3 트랙 URL 정제 시: `npm install -g defuddle`
