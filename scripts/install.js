@@ -25,7 +25,15 @@ const HOME = process.env.USERPROFILE || process.env.HOME || os.homedir();
 const CLAUDE_DIR = path.join(HOME, '.claude');
 const HOOKS_DIR = path.join(CLAUDE_DIR, 'hooks');
 const SETTINGS = path.join(CLAUDE_DIR, 'settings.json');
-const SRC_HOOKS = path.join(__dirname, '..', 'hooks');
+const SRC_ROOT = path.join(__dirname, '..');
+const SRC_HOOKS = path.join(SRC_ROOT, 'hooks');
+
+// 훅만 깔면 ①~④·⑥은 돌지만 ⑤ 구조화("저장해"·"vault 만들어")가 먹히지 않는다.
+// 스킬 폴더도 함께 설치한다.
+const SKILLS_DIR = path.join(CLAUDE_DIR, 'skills');
+const SKILL_NAME = '지축신-knowledge-accumulation';
+const SKILL_DIR = path.join(SKILLS_DIR, SKILL_NAME);
+const SKILL_PARTS = ['SKILL.md', 'README.md', 'prompts', 'templates', '.claude-plugin'];
 
 const MODE = process.argv.includes('--uninstall') ? 'uninstall'
   : process.argv.includes('--check') ? 'check' : 'install';
@@ -44,6 +52,31 @@ const cmdOf = (file) => `node "${q(path.join(HOOKS_DIR, file))}"`;
 
 function readSettings() {
   try { return JSON.parse(fs.readFileSync(SETTINGS, 'utf8')); } catch (e) { return {}; }
+}
+
+function copyInto(src, dst) {
+  const st = fs.statSync(src);
+  if (st.isDirectory()) {
+    if (!fs.existsSync(dst)) fs.mkdirSync(dst, { recursive: true });
+    for (const f of fs.readdirSync(src)) copyInto(path.join(src, f), path.join(dst, f));
+  } else {
+    fs.copyFileSync(src, dst);
+  }
+}
+
+// 스킬 폴더 설치 — SKILL.md 와 그것이 읽는 prompts/·templates/, 도해까지 함께 옮긴다.
+function installSkill() {
+  if (!fs.existsSync(path.join(SRC_ROOT, 'SKILL.md'))) { console.log('SKILL.md 없음 — 스킬 설치 건너뜀'); return 0; }
+  if (!fs.existsSync(SKILL_DIR)) fs.mkdirSync(SKILL_DIR, { recursive: true });
+  let n = 0;
+  const parts = SKILL_PARTS.concat(fs.readdirSync(SRC_ROOT).filter(f => f.endsWith('.svg')));
+  for (const p of parts) {
+    const src = path.join(SRC_ROOT, p);
+    if (!fs.existsSync(src)) continue;
+    copyInto(src, path.join(SKILL_DIR, p));
+    n++;
+  }
+  return n;
 }
 
 // 이미 등록됐는지 판단 — 경로 표기가 달라도 파일명으로 알아본다
@@ -67,7 +100,16 @@ function doCheck() {
     if (!fileOk || !regOk) missing++;
     console.log(`  ${r.event.padEnd(13)} ${r.file.padEnd(30)} 파일 ${fileOk ? 'O' : 'X'} · 등록 ${regOk ? 'O' : 'X'}`);
   }
+
+  // ⑤ 구조화는 훅이 아니라 스킬이 한다. 훅만 보고 완료로 판정하면 이 자리를 놓친다.
+  const skillOk = fs.existsSync(path.join(SKILL_DIR, 'SKILL.md'));
+  const promptsOk = fs.existsSync(path.join(SKILL_DIR, 'prompts'));
+  if (!skillOk) missing++;
+  console.log(`  ${'스킬'.padEnd(13)} ${SKILL_NAME.padEnd(30)} SKILL.md ${skillOk ? 'O' : 'X'} · prompts ${promptsOk ? 'O' : 'X'}`);
+  if (skillOk) console.log(`  스킬 위치     : ${SKILL_DIR}`);
+
   console.log(missing ? `\n미완료 ${missing}건 — node scripts/install.js 로 설치한다.` : '\n설치 완료 상태다.');
+  if (skillOk) console.log('스킬 인식은 Claude Code 를 새로 열어 "저장해" 또는 "vault 만들어" 로 확인한다.');
 }
 
 function doInstall() {
@@ -81,6 +123,10 @@ function doInstall() {
     copied++;
   }
   console.log(`훅 파일 ${copied}개 복사 → ${HOOKS_DIR}`);
+
+  // 1-1) 스킬 폴더 설치 — ⑤ 구조화를 부르려면 이것이 있어야 한다
+  const skillParts = installSkill();
+  if (skillParts) console.log(`스킬 설치 → ${SKILL_DIR}`);
 
   // 2) settings.json 백업 후 필요한 항목만 추가
   const s = readSettings();
