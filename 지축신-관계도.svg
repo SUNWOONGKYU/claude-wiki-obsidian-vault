@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1080" viewBox="0 0 1240 1080" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="a1" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#4a6fa5"/>
+    </marker>
+    <marker id="a2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#c9a227"/>
+    </marker>
+    <marker id="a3" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#6b7a8f"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="1080" fill="#ffffff"/>
+
+  <text x="60" y="54" font-size="27" font-weight="700" fill="#1f2933">지축신(知蓄神) — 구성 관계도</text>
+  <text x="60" y="84" font-size="15" fill="#5c6b7a">무엇이 무엇을 설치하고, 어떤 훅이 어느 폴더를 만들며, 그 산출물이 어디로 되돌아오는가</text>
+
+  <!-- ============ 배포물 ============ -->
+  <rect x="52" y="106" width="352" height="384" rx="10" fill="#fbfcfe" stroke="#4a6fa5"/>
+  <text x="72" y="136" font-size="16" font-weight="700" fill="#4a6fa5">배포물 — 저장소 / 스킬 폴더</text>
+  <text x="72" y="158" font-size="12" fill="#8a95a1" font-family="Consolas,monospace">SUNWOONGKYU/knowledge-accumulation</text>
+
+  <rect x="72" y="172" width="312" height="52" rx="7" fill="#eaf1fa" stroke="#4a6fa5" stroke-width="2"/>
+  <text x="88" y="194" font-size="14" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">scripts/install.js</text>
+  <text x="88" y="213" font-size="12" fill="#3d4c5a">설치 · <tspan font-family="Consolas,monospace">--check</tspan> · <tspan font-family="Consolas,monospace">--uninstall</tspan></text>
+
+  <rect x="72" y="234" width="312" height="46" rx="7" fill="#f4f7fb" stroke="#8a95a1"/>
+  <text x="88" y="256" font-size="13.5" font-weight="700" fill="#1f2933"><tspan font-family="Consolas,monospace">hooks/</tspan> (10개)</text>
+  <text x="88" y="273" font-size="12" fill="#3d4c5a">여섯 단계를 실제로 도는 코드</text>
+
+  <rect x="72" y="290" width="312" height="46" rx="7" fill="#f7f4fb" stroke="#7a5ca5"/>
+  <text x="88" y="312" font-size="13.5" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">SKILL.md</text>
+  <text x="88" y="329" font-size="12" fill="#3d4c5a">⑤ 구조화 — 사람이 부르는 부분</text>
+
+  <rect x="72" y="346" width="312" height="46" rx="7" fill="#f7f4fb" stroke="#7a5ca5"/>
+  <text x="88" y="368" font-size="13.5" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">prompts/ · templates/</text>
+  <text x="88" y="385" font-size="12" fill="#3d4c5a">1·2차 빌드 · 페르소나 · 일관성 카드</text>
+
+  <rect x="72" y="402" width="312" height="70" rx="7" fill="#f6f6f4" stroke="#a0a4a0"/>
+  <text x="88" y="424" font-size="13" font-weight="700" fill="#3d4c5a">계보</text>
+  <text x="88" y="443" font-size="11.5" fill="#5c6b7a">옵신 claude-wiki-obsidian-vault v0.6.2 승계</text>
+  <text x="88" y="461" font-size="11.5" fill="#5c6b7a">oh-my-wiki (MIT) 외부 derivative</text>
+
+  <!-- ============ 설치 결과 ============ -->
+  <rect x="444" y="106" width="352" height="384" rx="10" fill="#fbfcfe" stroke="#4a6fa5"/>
+  <text x="464" y="136" font-size="16" font-weight="700" fill="#4a6fa5">설치 결과 — 사용자 홈</text>
+  <text x="464" y="158" font-size="12" fill="#8a95a1" font-family="Consolas,monospace">~/.claude/</text>
+
+  <rect x="464" y="172" width="312" height="46" rx="7" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="480" y="194" font-size="13.5" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">~/.claude/hooks/</text>
+  <text x="480" y="211" font-size="12" fill="#3d4c5a">훅 파일 10개 복사</text>
+
+  <rect x="464" y="228" width="312" height="86" rx="7" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="480" y="250" font-size="13.5" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">~/.claude/settings.json</text>
+  <text x="480" y="269" font-size="12" fill="#3d4c5a">SessionStart → <tspan font-family="Consolas,monospace">session-restore.js</tspan></text>
+  <text x="480" y="286" font-size="12" fill="#3d4c5a">SessionEnd → raw · wiki · trigger (3건)</text>
+  <text x="480" y="303" font-size="12" fill="#3d4c5a">PreCompact → <tspan font-family="Consolas,monospace">pre-compact-handoff.js</tspan></text>
+
+  <rect x="464" y="324" width="312" height="64" rx="7" fill="#f2f9f4" stroke="#3f8f5f"/>
+  <text x="480" y="346" font-size="13" font-weight="700" fill="#1f2933">설치 성질</text>
+  <text x="480" y="365" font-size="11.5" fill="#3d4c5a">기존 훅 설정은 지우지 않는다 · 중복 등록 없음</text>
+  <text x="480" y="382" font-size="11.5" fill="#3d4c5a">수정 전 <tspan font-family="Consolas,monospace">settings.json</tspan> 백업</text>
+
+  <rect x="464" y="398" width="312" height="74" rx="7" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="480" y="420" font-size="13" font-weight="700" fill="#7a5c00">기록 위치는 작업 폴더 기준</text>
+  <text x="480" y="439" font-size="11.5" fill="#3d4c5a">git 저장소 안이면 그 저장소 루트가 기준</text>
+  <text x="480" y="457" font-size="11.5" fill="#3d4c5a">시스템 폴더에서 열린 세션은 기록하지 않는다</text>
+
+  <line x1="384" y1="198" x2="456" y2="198" stroke="#4a6fa5" stroke-width="2.5" marker-end="url(#a1)"/>
+  <text x="386" y="190" font-size="11.5" fill="#4a6fa5">설치</text>
+
+  <!-- ============ 훅 10개 ============ -->
+  <rect x="836" y="106" width="352" height="384" rx="10" fill="#fbfcfe" stroke="#8a95a1"/>
+  <text x="856" y="136" font-size="16" font-weight="700" fill="#3d4c5a">훅 10개 — 무엇을 맡는가</text>
+
+  <text x="856" y="164" font-size="12" font-weight="700" fill="#4a6fa5">① 원본 수집</text>
+  <text x="856" y="182" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">session-save-raw.js</text>
+
+  <text x="856" y="208" font-size="12" font-weight="700" fill="#4a6fa5">② 1차 증류 · ③ 색인</text>
+  <text x="856" y="226" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">session-to-wiki.js</text>
+  <text x="856" y="243" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">wiki-distill-worker.js</text>
+
+  <text x="856" y="269" font-size="12" font-weight="700" fill="#4a6fa5">④ 2차 증류</text>
+  <text x="856" y="287" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">wiki-topic-distill.js</text>
+  <text x="856" y="304" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">session-knowledge-trigger.js</text>
+  <text x="856" y="321" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">wiki-daily-run.js</text>
+
+  <text x="856" y="347" font-size="12" font-weight="700" fill="#4a6fa5">⑥ 활용</text>
+  <text x="856" y="365" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">wiki-corpus-build.js</text>
+  <text x="856" y="382" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">session-restore.js</text>
+
+  <text x="856" y="408" font-size="12" font-weight="700" fill="#4a6fa5">공통</text>
+  <text x="856" y="426" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">lib-project-dir.js</text>
+  <text x="856" y="443" font-size="12" fill="#3d4c5a" font-family="Consolas,monospace">pre-compact-handoff.js</text>
+  <text x="856" y="466" font-size="11.5" fill="#8a95a1">기록 위치 판정 / 컴팩션 직전 인계</text>
+
+  <line x1="776" y1="195" x2="828" y2="195" stroke="#6b7a8f" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#a3)"/>
+
+  <!-- ============ 데이터 ============ -->
+  <rect x="52" y="516" width="744" height="330" rx="10" fill="#fffdf7" stroke="#c9a227"/>
+  <text x="72" y="546" font-size="16" font-weight="700" fill="#7a5c00">쌓이는 것 — &lt;작업폴더&gt;/sessions/</text>
+
+  <rect x="72" y="562" width="212" height="60" rx="7" fill="#ffffff" stroke="#c9a227"/>
+  <text x="86" y="584" font-size="13" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">raw/</text>
+  <text x="86" y="603" font-size="11.5" fill="#3d4c5a">대화 원본 · 수정 금지</text>
+  <line x1="284" y1="592" x2="316" y2="592" stroke="#c9a227" stroke-width="2" marker-end="url(#a2)"/>
+
+  <rect x="320" y="562" width="212" height="60" rx="7" fill="#ffffff" stroke="#c9a227"/>
+  <text x="334" y="584" font-size="13" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">summary/ · wiki/</text>
+  <text x="334" y="603" font-size="11.5" fill="#3d4c5a">세션별 요약 · 위키 노트 + INDEX</text>
+  <line x1="532" y1="592" x2="564" y2="592" stroke="#c9a227" stroke-width="2" marker-end="url(#a2)"/>
+
+  <rect x="568" y="562" width="212" height="60" rx="7" fill="#ffffff" stroke="#c9a227" stroke-width="2"/>
+  <text x="582" y="584" font-size="13" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">topics/</text>
+  <text x="582" y="603" font-size="11.5" fill="#3d4c5a">주제별 확정 지식</text>
+
+  <rect x="568" y="634" width="212" height="98" rx="7" fill="#fdfaf5" stroke="#c9a227" stroke-dasharray="4 3"/>
+  <text x="582" y="656" font-size="12" fill="#3d4c5a">결정 · 패턴 · 함정</text>
+  <text x="582" y="674" font-size="12" fill="#3d4c5a">사실 · 도구 · 미해결</text>
+  <text x="582" y="694" font-size="11.5" fill="#b45050">_미확정.md  (검색 제외)</text>
+  <text x="582" y="712" font-size="11.5" fill="#8a95a1" font-family="Consolas,monospace">_history/</text>
+
+  <rect x="72" y="646" width="460" height="56" rx="7" fill="#ffffff" stroke="#4a6fa5"/>
+  <text x="86" y="668" font-size="13" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">sessions/topics.config.json  <tspan font-size="11" font-family="'Malgun Gothic',sans-serif" fill="#5c6b7a">(선택)</tspan></text>
+  <text x="86" y="687" font-size="11.5" fill="#3d4c5a">주제 목록을 프로젝트마다 갈아끼운다 — name · desc, 최대 8개</text>
+  <line x1="532" y1="674" x2="564" y2="674" stroke="#4a6fa5" stroke-width="2" marker-end="url(#a1)"/>
+
+  <rect x="72" y="716" width="460" height="56" rx="7" fill="#ffffff" stroke="#c9a227"/>
+  <text x="86" y="738" font-size="13" font-weight="700" fill="#1f2933" font-family="Consolas,monospace">sessions/corpus.jsonl</text>
+  <text x="86" y="757" font-size="11.5" fill="#3d4c5a">검색 대상 묶음 — 미확정 항목은 넣지 않는다</text>
+  <path d="M568 700 L552 700 L552 744 L540 744" fill="none" stroke="#c9a227" stroke-width="2" marker-end="url(#a2)"/>
+
+  <rect x="72" y="786" width="708" height="56" rx="7" fill="#eef2f7" stroke="#6b7a8f"/>
+  <text x="86" y="809" font-size="13" fill="#1f2933">새 대화가 열릴 때 <tspan font-family="Consolas,monospace" font-weight="700">session-restore.js</tspan> 가 직전 맥락과 주제 지식을 자동으로 넣는다.</text>
+  <text x="86" y="830" font-size="12.5" fill="#3d4c5a">이 되먹임이 없으면 지식은 그냥 쌓이기만 하고 다음 작업에 쓰이지 않는다.</text>
+
+  <!-- ============ 사람이 하는 것 ============ -->
+  <rect x="836" y="516" width="352" height="330" rx="10" fill="#faf8fd" stroke="#7a5ca5"/>
+  <text x="856" y="546" font-size="16" font-weight="700" fill="#7a5ca5">사람이 하는 것</text>
+
+  <rect x="856" y="562" width="312" height="70" rx="7" fill="#ffffff" stroke="#7a5ca5"/>
+  <text x="872" y="584" font-size="13" font-weight="700" fill="#1f2933">한 번 — 설치</text>
+  <text x="872" y="603" font-size="11.5" fill="#3d4c5a" font-family="Consolas,monospace">node scripts/install.js</text>
+  <text x="872" y="621" font-size="11.5" fill="#3d4c5a" font-family="Consolas,monospace">node scripts/install.js --check</text>
+
+  <rect x="856" y="644" width="312" height="88" rx="7" fill="#ffffff" stroke="#7a5ca5"/>
+  <text x="872" y="666" font-size="13" font-weight="700" fill="#1f2933">필요할 때 — 말로 부른다</text>
+  <text x="872" y="685" font-size="11.5" fill="#3d4c5a">"저장해" · "vault 만들어" → ⑤ 구조화</text>
+  <text x="872" y="703" font-size="11.5" fill="#3d4c5a">"2차 증류 돌려" → ④ 즉시 실행</text>
+  <text x="872" y="721" font-size="11.5" fill="#3d4c5a">"지난 결정 찾아줘" → ⑥ 코퍼스 검색</text>
+
+  <rect x="856" y="744" width="312" height="86" rx="7" fill="#f2f9f4" stroke="#3f8f5f"/>
+  <text x="872" y="766" font-size="13" font-weight="700" fill="#1f2933">사람이 하지 않는 것</text>
+  <text x="872" y="785" font-size="11.5" fill="#3d4c5a">항목마다 승인하지 않는다</text>
+  <text x="872" y="803" font-size="11.5" fill="#3d4c5a">직접 정리·분류하지 않는다</text>
+  <text x="872" y="821" font-size="11.5" fill="#3d4c5a">근거 링크를 손으로 고치지 않는다</text>
+
+  <!-- ============ 하단 ============ -->
+  <rect x="52" y="872" width="1136" height="160" rx="10" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="76" y="900" font-size="15" font-weight="700" fill="#1f2933">다른 컴퓨터로 옮길 때</text>
+  <text x="76" y="926" font-size="12.5" fill="#3d4c5a">1. 이 스킬 폴더를 통째로 복사하거나 <tspan font-family="Consolas,monospace">git clone https://github.com/SUNWOONGKYU/knowledge-accumulation</tspan></text>
+  <text x="76" y="948" font-size="12.5" fill="#3d4c5a">2. <tspan font-family="Consolas,monospace">node scripts/install.js</tspan> — 실행하는 계정의 홈을 쓴다. 경로·사용자 이름을 하드코딩하지 않았다</text>
+  <text x="76" y="970" font-size="12.5" fill="#3d4c5a">3. <tspan font-family="Consolas,monospace">node scripts/install.js --check</tspan> 로 전 항목 <tspan font-weight="700">O</tspan> 확인 → 작업 대화를 한 번 끝내면 <tspan font-family="Consolas,monospace">sessions/</tspan> 가 생긴다</text>
+  <text x="76" y="996" font-size="12.5" fill="#5c6b7a">쌓인 기록(<tspan font-family="Consolas,monospace">sessions/</tspan>)은 작업 폴더에 있으므로 함께 옮기지 않으면 새 컴퓨터에서는 빈 상태로 시작한다. 옮기려면 작업 폴더째 가져간다.</text>
+  <text x="76" y="1020" font-size="11.5" fill="#8a95a1">필요 환경: Windows · Node.js · Claude Code CLI 구독 로그인. API 키는 쓰지 않는다 — 증류는 구독 세션으로 돈다.</text>
+</svg>

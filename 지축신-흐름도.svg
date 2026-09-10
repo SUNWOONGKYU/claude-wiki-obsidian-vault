@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1150" viewBox="0 0 1180 1150" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#4a6fa5"/>
+    </marker>
+    <marker id="arR" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#b45050"/>
+    </marker>
+    <marker id="arG" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#6b7a8f"/>
+    </marker>
+  </defs>
+
+  <rect width="1180" height="1150" fill="#ffffff"/>
+
+  <text x="60" y="56" font-size="27" font-weight="700" fill="#1f2933">지축신(知蓄神) — LLM-Wiki 6단계 흐름도</text>
+  <text x="60" y="86" font-size="15" fill="#5c6b7a">일하면 그 기록이 저절로 지식으로 쌓이고, 다음 작업이 그 지식을 근거와 함께 꺼내 쓴다. ①②③⑥은 훅이 자동으로 돈다.</text>
+
+  <!-- 시작 -->
+  <rect x="60" y="112" width="1060" height="46" rx="8" fill="#eef2f7" stroke="#6b7a8f"/>
+  <text x="80" y="141" font-size="15" fill="#1f2933"><tspan font-weight="700">작업 대화</tspan>  —  Claude Code 세션이 끝난다 (SessionEnd)</text>
+  <line x1="590" y1="158" x2="590" y2="182" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ① -->
+  <rect x="60" y="186" width="560" height="86" rx="8" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="82" y="216" font-size="17" font-weight="700" fill="#1f2933">① 원본 수집</text>
+  <text x="82" y="242" font-size="14" fill="#3d4c5a">대화 원본을 손대지 않고 그대로 저장한다</text>
+  <text x="82" y="263" font-size="13" fill="#4a6fa5" font-family="Consolas,monospace">session-save-raw.js</text>
+  <rect x="680" y="186" width="440" height="86" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="216" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="243" font-size="13" fill="#3d4c5a" font-family="Consolas,monospace">sessions/raw/*.jsonl</text>
+  <text x="702" y="263" font-size="12" fill="#7a6a3a">원본은 절대 수정하지 않는다</text>
+  <line x1="620" y1="229" x2="672" y2="229" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="340" y1="272" x2="340" y2="292" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ② -->
+  <rect x="60" y="296" width="560" height="86" rx="8" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="82" y="326" font-size="17" font-weight="700" fill="#1f2933">② 1차 증류</text>
+  <text x="82" y="352" font-size="14" fill="#3d4c5a">원본을 읽어 이어가기 요약과 세션 위키 노트로 줄인다</text>
+  <text x="82" y="373" font-size="13" fill="#4a6fa5" font-family="Consolas,monospace">session-to-wiki.js → wiki-distill-worker.js</text>
+  <rect x="680" y="296" width="440" height="86" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="326" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="353" font-size="13" fill="#3d4c5a" font-family="Consolas,monospace">sessions/summary/ · sessions/wiki/</text>
+  <text x="702" y="373" font-size="12" fill="#7a6a3a">세션당 노트 1개만 유지 (옛 노트 정리)</text>
+  <line x1="620" y1="339" x2="672" y2="339" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="340" y1="382" x2="340" y2="402" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ③ -->
+  <rect x="60" y="406" width="560" height="70" rx="8" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="82" y="436" font-size="17" font-weight="700" fill="#1f2933">③ 색인</text>
+  <text x="82" y="461" font-size="14" fill="#3d4c5a">언제 무엇을 했는지 찾아 들어가는 목록을 갱신한다</text>
+  <rect x="680" y="406" width="440" height="70" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="436" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="461" font-size="13" fill="#3d4c5a" font-family="Consolas,monospace">sessions/wiki/INDEX.md</text>
+  <line x1="620" y1="441" x2="672" y2="441" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="340" y1="476" x2="340" y2="496" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ④ -->
+  <rect x="60" y="500" width="560" height="100" rx="8" fill="#eaf1fa" stroke="#4a6fa5" stroke-width="2"/>
+  <text x="82" y="530" font-size="17" font-weight="700" fill="#1f2933">④ 2차 증류</text>
+  <text x="82" y="556" font-size="14" fill="#3d4c5a">여러 세션을 가로질러 읽고 주제별로 다시 묶는다</text>
+  <text x="82" y="577" font-size="13" fill="#4a6fa5" font-family="Consolas,monospace">wiki-topic-distill.js</text>
+  <text x="82" y="595" font-size="12" fill="#5c6b7a">미처리 노트 5개 이상이면 자동 · 매일 배치 · <tspan font-family="Consolas,monospace">--force</tspan></text>
+  <rect x="680" y="500" width="440" height="100" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="530" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="556" font-size="13" fill="#3d4c5a"><tspan font-family="Consolas,monospace">sessions/topics/</tspan>{주제}<tspan font-family="Consolas,monospace">.md</tspan></text>
+  <text x="702" y="577" font-size="12" fill="#7a6a3a">기본 6주제 · <tspan font-family="Consolas,monospace">topics.config.json</tspan> 으로 교체</text>
+  <text x="702" y="595" font-size="12" fill="#7a6a3a">덮어쓰기 전 <tspan font-family="Consolas,monospace">topics/_history/</tspan> 에 이전본 보관</text>
+  <line x1="620" y1="550" x2="672" y2="550" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="340" y1="600" x2="340" y2="620" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="352" y="616" font-size="12" fill="#b45050">상세는 아래 ④ 패널</text>
+
+  <!-- ⑤ -->
+  <rect x="60" y="624" width="560" height="70" rx="8" fill="#f7f4fb" stroke="#7a5ca5"/>
+  <text x="82" y="654" font-size="17" font-weight="700" fill="#1f2933">⑤ 구조화 <tspan font-size="12" fill="#7a5ca5">(유일하게 사람이 부른다)</tspan></text>
+  <text x="82" y="679" font-size="14" fill="#3d4c5a">옵시디언 볼트로 엮는다 — "저장해" · "vault 만들어"</text>
+  <rect x="680" y="624" width="440" height="70" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="654" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="679" font-size="13" fill="#3d4c5a">옵시디언 볼트 (SKILL.md · prompts/ · templates/)</text>
+  <line x1="620" y1="659" x2="672" y2="659" stroke="#7a5ca5" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="340" y1="694" x2="340" y2="714" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- ⑥ -->
+  <rect x="60" y="718" width="560" height="86" rx="8" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="82" y="748" font-size="17" font-weight="700" fill="#1f2933">⑥ 활용</text>
+  <text x="82" y="774" font-size="14" fill="#3d4c5a">검색 대상 묶음을 만들고, 새 세션 시작 때 자동으로 주입한다</text>
+  <text x="82" y="795" font-size="13" fill="#4a6fa5" font-family="Consolas,monospace">wiki-corpus-build.js · session-restore.js</text>
+  <rect x="680" y="718" width="440" height="86" rx="8" fill="#fffaf0" stroke="#c9a227"/>
+  <text x="702" y="748" font-size="14" font-weight="700" fill="#7a5c00">산출물</text>
+  <text x="702" y="775" font-size="13" fill="#3d4c5a" font-family="Consolas,monospace">sessions/corpus.jsonl</text>
+  <text x="702" y="795" font-size="12" fill="#7a6a3a">미확정 항목은 검색 대상에서 제외한다</text>
+  <line x1="620" y1="761" x2="672" y2="761" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- 되먹임 -->
+  <path d="M1120 761 L1155 761 L1155 135 L1120 135" fill="none" stroke="#6b7a8f" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arG)"/>
+  <text x="680" y="826" font-size="12" fill="#6b7a8f">다음 대화가 열릴 때 직전 맥락과 주제 지식이 자동으로 들어간다 (SessionStart)</text>
+
+  <!-- ④ 상세 패널 -->
+  <rect x="60" y="852" width="1060" height="258" rx="10" fill="#fcfdfe" stroke="#b45050" stroke-dasharray="5 4"/>
+  <text x="84" y="884" font-size="17" font-weight="700" fill="#b45050">④ 2차 증류 상세 — 근거가 어긋나지 않게 하는 자리</text>
+
+  <rect x="84" y="900" width="228" height="72" rx="7" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="98" y="924" font-size="14" font-weight="700" fill="#1f2933">작성 호출</text>
+  <text x="98" y="945" font-size="12" fill="#3d4c5a">기존 주제 노트 + 새 세션 노트</text>
+  <text x="98" y="963" font-size="12" fill="#3d4c5a">인용은 <tspan font-family="Consolas,monospace">[S1]</tspan> 슬롯 번호로만</text>
+  <line x1="312" y1="936" x2="344" y2="936" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="348" y="900" width="228" height="72" rx="7" fill="#f4f7fb" stroke="#4a6fa5"/>
+  <text x="362" y="924" font-size="14" font-weight="700" fill="#1f2933">검증 호출 <tspan font-size="11" fill="#5c6b7a">(별도 호출)</tspan></text>
+  <text x="362" y="945" font-size="12" fill="#3d4c5a">항목과 그 항목이 인용한 원문만</text>
+  <text x="362" y="963" font-size="12" fill="#3d4c5a">관련성 · 수치 · 제안/확정 대조</text>
+  <line x1="576" y1="936" x2="608" y2="936" stroke="#4a6fa5" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="612" y="900" width="228" height="72" rx="7" fill="#f2f9f4" stroke="#3f8f5f"/>
+  <text x="626" y="924" font-size="14" font-weight="700" fill="#1f2933">통과 → 확정</text>
+  <text x="626" y="945" font-size="12" fill="#3d4c5a">주제 노트에 반영</text>
+  <text x="626" y="963" font-size="12" fill="#3d4c5a">근거 <tspan font-weight="700">[[파일명]]</tspan> 은 코드가 붙인다</text>
+
+  <rect x="876" y="900" width="220" height="72" rx="7" fill="#fdf2f2" stroke="#b45050"/>
+  <text x="890" y="924" font-size="14" font-weight="700" fill="#1f2933">실패 → 격리</text>
+  <text x="890" y="945" font-size="12" fill="#3d4c5a">재작성 최대 2회</text>
+  <text x="890" y="963" font-size="11" fill="#3d4c5a"><tspan font-weight="700">topics/_미확정.md</tspan> 로 분리 · 검색 제외</text>
+
+  <rect x="84" y="994" width="1012" height="100" rx="7" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="98" y="1018" font-size="13" font-weight="700" fill="#1f2933">지식을 잃지 않게 하는 세 가지 (실측으로 들어온 장치)</text>
+  <text x="98" y="1040" font-size="12.5" fill="#3d4c5a">· <tspan font-weight="700">이어받기 면제</tspan> — 본문이 그대로거나 인용할 슬롯이 없는 항목은 다시 검증하지 않고 옛 본문·링크째 이어받는다</text>
+  <text x="98" y="1060" font-size="12.5" fill="#3d4c5a">· <tspan font-weight="700">삭제 금지 안전망</tspan> — 확정본에서 빠진 기존 항목은 옛 본문 그대로 되살린다. 손댄 판본만 미확정에 남아 다음 회차에 다시 본다</text>
+  <text x="98" y="1080" font-size="12.5" fill="#3d4c5a">· <tspan font-weight="700">사실과 추론 분리</tspan> — 원문이 말한 것만 본문에, 신호·예방책·일반화·짐작한 원인은 <tspan font-weight="700">추정:</tspan> 줄로. 검증은 <tspan font-weight="700">추정:</tspan> 앞부분만 판정한다</text>
+
+  <text x="60" y="1132" font-size="11.5" fill="#8a95a1">인프라 장애(구독 한도·인증)로 실패하면 저장을 보류하고 커서를 전진시키지 않는다 — 그 기간의 기록이 영영 안 읽히는 일을 막는다.</text>
+</svg>
