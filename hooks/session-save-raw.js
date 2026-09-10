@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+
+/**
+ * session-save-raw.js — SessionEnd hook (안전망 raw 저장)
+ *
+ * 세션이 끝날 때(Ctrl+D / /exit 등) 발동.
+ * stdin JSON의 transcript_path(이번 세션 대화 .jsonl)를 읽어
+ * <cwd>\sessions\raw\ 에 그대로 복사한다. 폴더 없으면 만든다.
+ *
+ * - 증류(요약)는 하지 않는다. raw 보존만 담당 (증류는 session-to-wiki.js가 띄우는 워커가 함).
+ * - 멱등: 같은 session_id 파일이 이미 있으면 건너뛴다 (중복 방지).
+ * - source=clear 등 어떤 reason이든 raw는 보존한다.
+ * - 절대 차단하지 않음(exit 0). SessionEnd는 종료를 막을 수 없음.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { sessionsAnchor } = require('./lib-project-dir');
+
+let buf = '';
+let done = false;
+
+function ts() {
+  const n = new Date();
+  const p = x => String(x).padStart(2, '0');
+  return `${n.getFullYear()}_${p(n.getMonth() + 1)}_${p(n.getDate())}__${p(n.getHours())}.${p(n.getMinutes())}`;
+}
+
+function ensureDir(d) {
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+}
+
+function finish() {
+  if (done) return;
+  done = true;
+  try {
+    if (process.env.CLAUDE_WIKI_CHILD) return process.exit(0); // 위키 워커가 띄운 세션 — 건너뜀
+
+    let d = {};
+    try { d = JSON.parse(buf || '{}'); } catch {}
+
+    const cwd = d.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    const transcript = d.transcript_path;
+    const sessionId = String(d.session_id || 'unknown').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40);
+
+    if (!transcript || !fs.existsSync(transcript)) {
+      console.log(`[session-save-raw] transcript 없음 — 저장 건너뜀`);
+      return process.exit(0);
+    }
+
+    // git 루트 한 곳에 저장한다 — 하위 폴더에서 켜도 통일. 복원 훅과 동일 기준. (PO 지시 2026-06-26)
+    const projectDir = sessionsAnchor(cwd);
+
+    const rawDir = path.join(projectDir, 'sessions', 'raw');
+    ensureDir(rawDir);
+
+    // 컴팩트 핸드오프(sessions/compact/<sid>_핸드오프.md)는 '세션이 살아있는 동안' 쓰는 임시물이다.
+    // 세션이 끝나면 역할이 끝나므로 정리한다 — 정식 이어가기 요약은 워커가 summary/에 따로 만든다.
+    // 이 정리가 없으면 compact/ 에 죽은 세션 파일이 무한정 쌓인다. (2026-09-09)
+    try {
+      const compactDir = path.join(projectDir, 'sessions', 'compact');
+      const cf = path.join(compactDir, `${sessionId}_핸드오프.md`);
+      if (fs.existsSync(cf)) { fs.unlinkSync(cf); console.log(`[session-save-raw] 컴팩트 핸드오프 정리: ${sessionId}`); }
+      // SessionEnd 미발화(크래시·강제종료)로 남은 남의 고아 파일도 7일 지나면 함께 청소.
+      if (fs.existsSync(compactDir)) {
+        const WEEK = 7 * 24 * 3600 * 1000, now = Date.now();
+        for (const f of fs.readdirSync(compactDir)) {
+          const fp = path.join(compactDir, f);
+          try { if (now - fs.statSync(fp).mtimeMs > WEEK) fs.unlinkSync(fp); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+
+    // 멱등: 같은 session_id 파일이 이미 있으면 스킵
+    const already = fs.readdirSync(rawDir).some(f => f.includes(sessionId));
+    if (already) {
+      console.log(`[session-save-raw] 이미 저장된 세션(${sessionId}) — 건너뜀`);
+      return process.exit(0);
+    }
+
+    const out = path.join(rawDir, `${ts()}_${sessionId}.jsonl`);
+    fs.copyFileSync(transcript, out);
+    console.log(`[session-save-raw] raw 저장 완료 → ${out}`);
+  } catch (e) {
+    console.error(`[session-save-raw] 실패: ${e.message}`);
+  }
+  process.exit(0);
+}
+
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', c => { buf += c; });
+process.stdin.on('end', finish);
+setTimeout(finish, 4000);

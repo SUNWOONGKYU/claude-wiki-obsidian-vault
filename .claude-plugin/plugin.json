@@ -1,33 +1,23 @@
 {
-  "name": "옵신-claude-wiki-obsidian-vault",
-  "alias": "옵신",
-  "version": "0.6.1",
-  "description": "★ 별칭 옵신 (지식의 신) ★ 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수하는 슈퍼스킬. v0.6.0부터 healthcheck.ps1이 vault 규모를 측정해 5 트랙(T0 Tiny / T1 Casual / T2 Structured / T2 Full / T2-A ADOPT)을 자동 추천 — 작은 vault에 풀 슈퍼스킬을 강제하지 않음. ADOPT 모드로 큰 vault 흡수 + vault_role(active/archive/hybrid)로 vault 성격별 작업 분기. __unmapped__ 키워드로 archive vault 정식 지원. Oh My Wiki 외부 derivative — 하드코딩 4종 페르소나를 vault-embedded 메타 페르소나로 일반화.",
+  "name": "knowledge-accumulation",
+  "version": "1.0.0",
+  "description": "지축신(知蓄神) — 일하면 그 기록이 저절로 지식으로 쌓이고, 다음 작업이 근거와 함께 꺼내 쓰게 만드는 LLM-Wiki 시스템. 여섯 단계(원본 수집·1차 증류·색인·2차 증류·구조화·활용)를 훅과 스킬로 한 번에 세운다. 사람 승인 대기열 없이 자동 검증·재시도·미확정 격리로 근거를 지킨다. 옵신(claude-wiki-obsidian-vault v0.6.2)의 후속으로, 5단계 구조화만 하던 범위를 여섯 단계 전체로 확장했다.",
   "author": {
     "name": "선웅규 (Sunwoongkyu)",
     "email": "wksun999@hanmail.net",
     "url": "https://github.com/SUNWOONGKYU"
   },
-  "repository": "https://github.com/SUNWOONGKYU/claude-wiki-obsidian-vault",
+  "repository": "https://github.com/SUNWOONGKYU/knowledge-accumulation",
   "license": "MIT",
   "keywords": [
-    "obsidian",
     "llm-wiki",
     "knowledge-management",
     "second-brain",
     "pkm",
-    "vault-bootstrap",
-    "kepano",
-    "korean",
+    "obsidian",
     "claude-code",
-    "claude-skill",
-    "archive-vault",
-    "adopt-mode",
-    "rag-ready",
-    "auto-track",
-    "tiny-vault",
-    "옵신",
-    "oh-my-wiki-derivative"
+    "hooks",
+    "korean"
   ],
   "based_on": {
     "name": "oh-my-wiki",

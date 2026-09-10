@@ -1,324 +1,129 @@
 ---
-name: 옵신-claude-wiki-obsidian-vault
-description: ★ 별칭 옵신 (지식의 신) ★ 본인 전용 디렉터·오케스트레이터. 자연어 한 줄로 Claude·Wiki·Obsidian Vault를 생성·갱신·흡수한다.
-  3 모드(CREATE / LOAD / ADOPT) × 5 트랙(T0 Tiny / T1 캐주얼 / T2 구조화 / T2-A 흡수 / T3 RAG-ready) × 3 vault_role(active / archive / hybrid).
-  v0.6.0부터 healthcheck.ps1이 vault 규모(.md 수·폴더 수)를 측정해 트랙을 자동 결정·추천 — 작은 vault(< 10 .md)는 T0 Tiny로 분기.
-  페르소나·일관성 카드·1·2차 빌드를 수행하고, kepano 5종(obsidian-markdown/bases/cli, json-canvas, defuddle)을 도구로 호출.
-  사용자가 "옵신", "옵신아", "저장해", "vault 만들어", "위키 부트스트랩", "페르소나 박아", "이 vault에 페르소나 박아",
-  "RAG 준비해", "raw 정리해", "1차 빌드", "2차 빌드", "archive vault 흡수", "승급" 등을 말할 때 발동.
+name: 지축신-knowledge-accumulation
+description: ★ 별칭 지축신(知蓄神) ★ 일하면 그 기록이 저절로 지식으로 쌓이고, 다음 작업이 그 지식을 근거와 함께 꺼내 쓰게 만드는 LLM-Wiki 시스템. 여섯 단계(원본 수집 → 1차 증류 → 색인 → 2차 증류 → 구조화 → 활용)를 훅과 스킬로 한 번에 세운다. 사람이 정리하지 않고, 항목마다 승인을 요구하지 않는다. 정상 항목은 자동 반영되고 근거 대조에 실패한 항목만 미확정으로 격리된다. 사용자가 "지축신", "지식 쌓아", "위키 세워", "vault 만들어", "저장해", "페르소나 박아", "2차 증류 돌려", "지난 결정 찾아줘", "기존 vault 흡수"를 말할 때 발동. (옵신-claude-wiki-obsidian-vault 후속 — 5단계 구조화만 하던 것을 여섯 단계 전체로 확장)
 metadata:
   type: core
-  version: 0.6.2
-  created: 2026-05-27
-  alias: 옵신
+  version: 1.0.0
+  created: 2026-09-10
+  alias: 지축신
+  supersedes: 옵신-claude-wiki-obsidian-vault (v0.6.2)
 ---
 
-# claude-wiki-obsidian-vault-코어4
+# 지축신(知蓄神) — LLM-Wiki 지식 축적 시스템
 
-본인이 다양한 직무·프로젝트에서 사용하는 **Claude·Wiki·Obsidian Vault**를 자연어 한 줄로 생성·갱신·흡수하는 슈퍼스킬. 페르소나는 vault에 박힌다(`_meta/persona.md`) — 하드코딩 4종은 없다.
+일한 기록을 다음 작업의 판단 근거로 바꾼다. 사람이 정리에 매달리지 않는다.
 
-**v0.6.0 핵심 변화** (PO 결정 "자동으로 분기" 2026-05-29):
-- **T0 Tiny 트랙 신설** — 작은 vault(< 10 .md, 0~1 폴더) 전용 최소 트랙. persona.md 1파일만 박음. 셋업 2분.
-- **자동 트랙 결정** — healthcheck.ps1이 vault 규모를 측정해 T0 / T1 / T2 Structured / T2 Full / T2-A를 자동 추천. 사용자가 매번 분기 선택 X.
-- **T0 → T2 자동 승급 안내** — vault가 30+ 노트로 성장하면 LOAD 모드에서 자동 안내.
-- **"소 잡는 칼" 문제 해소** — 작은 vault에 풀 슈퍼스킬 강제 적용을 방지.
+## 0. 무엇이 달라졌나 (옵신 → 지축신)
 
-**v0.3.0 기반** (원성묵 원장 외부 검증 반영):
-- **vault_role** 옵션 (`active` / `archive` / `hybrid`) — vault 성격에 맞춰 작업 자동 분기
-- **`__unmapped__` 키워드** — 폴더 변수 값으로 박으면 그 폴더 작업 자체를 건너뜀 (archive vault용)
-- **변수 치환 규칙** 본문 명시 (기존엔 변경이력에만 있었음)
-- **본문 ↔ 부속파일 정합성 체크리스트** 추가 (v0.2.1 healthcheck 미구현 같은 사례 재발 차단)
+옵신은 **5단계 구조화**만 담당했다. 볼트를 만들고 노트에 틀과 연결을 입히는 일이다. 나머지 다섯 단계는 훅으로 따로 돌고 있어서, 받는 사람은 두 번 설치해야 했고 둘의 관계가 보이지 않았다.
 
-## 진입 트리거
+지축신은 여섯 단계를 하나로 담는다. 그리고 **승인 대기열을 없앴다**. 옵신은 2차 빌드를 "사용자 승인 후 적용"으로 막아두었는데, 그러면 사람이 확인할 때까지 지식이 멈춘다. 대신 자동 검증·재시도·미확정 격리로 바꿨다.
 
-다음 표현 중 하나라도 잡히면 발동:
-- `저장해` · `raw/에 넣어` · `이거 정리해서 vault에`
-- `vault 만들어` · `위키 만들어` · `{프로젝트명} 부트스트랩`
-- `페르소나 박아` · `이 vault에 페르소나 박아` · `{직무} 위키`
-- `archive vault 흡수` · `보관소 vault에 메타만 박아`
-- `RAG 준비해` · `wiki-e-rag 호환`
-- `1차 빌드` · `2차 빌드` · `raw 정리`
+## 1. 여섯 단계
 
-## 의존성 (사용 전 healthcheck로 확인)
+| 단계 | 담당 | 산출물 |
+|---|---|---|
+| ① 원본 수집 | `session-save-raw.js` (SessionEnd) | `sessions/raw/` |
+| ② 1차 증류 | `session-to-wiki.js` → `wiki-distill-worker.js` | `sessions/summary/` · `sessions/wiki/` |
+| ③ 색인 | 같은 워커 | `sessions/wiki/INDEX.md` |
+| ④ 2차 증류 | `wiki-topic-distill.js` | `sessions/topics/결정·패턴·함정.md` |
+| ⑤ 구조화 | 이 스킬 (§4) | 옵시디언 볼트 |
+| ⑥ 활용 | `wiki-corpus-build.js` + `session-restore.js` | `sessions/corpus.jsonl` + 세션 시작 시 자동 주입 |
 
-- Obsidian 1.12.7+ — Settings → General → Advanced → "Enable CLI" 활성화 (1.12.x부터 CLI 메뉴 정식 노출. 출처: kepano/obsidian-skills README + 본 PC 실측 v1.12.7.0 동작 확인 2026-05-27)
-- kepano 5종 스킬: `obsidian-markdown` · `obsidian-bases` · `json-canvas` · `obsidian-cli` · `defuddle`
-- PowerShell (scripts/ 실행용)
-- T3 트랙에서 URL 정제 시: `npm install -g defuddle`
+①②③⑥은 훅이 자동으로 돈다. ④는 미처리 노트가 5개 이상 쌓이면 자동, 또는 매일 배치. ⑤만 자연어 명령으로 부른다.
 
-## 변수 체계 (v0.3 본문 명시)
+## 2. 진입 트리거
 
-페르소나(`_meta/persona.md`)에 박힌 변수들이 후속 모든 Stage에서 자동 치환된다.
+- `저장해` · `이거 정리해서 vault에` → ⑤ 구조화 (T1 캐주얼)
+- `vault 만들어` · `위키 세워` · `{프로젝트} 부트스트랩` → ⑤ 부트스트랩
+- `페르소나 박아` · `이 vault에 페르소나 박아` → 페르소나 주입
+- `기존 vault 흡수` · `archive vault 흡수` → ADOPT 모드
+- `2차 증류 돌려` → ④ 즉시 실행
+- `지난 결정 찾아줘` · `그때 왜 그렇게 정했지` → ⑥ 코퍼스 검색
 
-### 어휘 변수 (3종)
+## 3. 근거가 어긋나지 않게 하는 장치 (④의 핵심)
 
-| 변수 | 정의 | 치환 시점 | 예시 |
-|---|---|---|---|
-| `{who_label}` | 본 vault의 *주체* 명명 (Stage 1 Q2 응답) | dashboard.base displayName, properties 설명, 1·2차 빌드 prompt | "의뢰인" / "거래처" / "직능" |
-| `{topic_label}` | 본 vault의 *주제 영역* 명명 (Stage 1 Q3 응답) | dashboard.base displayName, 1·2차 빌드 prompt | "법률쟁점" / "요리" / "AI 에이전트" |
-| `{kind_examples}` | 본 vault의 *문서 종류* 목록 (Stage 1 Q4 응답) | first_build.md frontmatter `kind` 후보, dashboard.base 필터 | ["의견서", "메모"] / ["레시피", "메뉴기획서"] |
+2차 증류는 AI가 노트를 재구성하는 단계라 근거가 틀어지기 쉽다. 실측에서 나온 실패가 세 종류였고, 각각을 코드로 막는다.
 
-### 폴더 변수 (6종 + `__unmapped__`)
-
-| 변수 | 디폴트 (CREATE) | 본인 매핑 (ADOPT) | __unmapped__ |
-|---|---|---|---|
-| `folder_who` | `사례/` | `직능분석/에이전트` 등 다단계 | 사례 작업 건너뜀 |
-| `folder_topic` | `주제/` | `_위키` 등 | 주제 작업 건너뜀 |
-| `folder_wiki` | `wiki/` | `_위키` | wiki 빌드 건너뜀 |
-| `folder_canvas` | `캔버스/` | `{본인_프로젝트}/diagram` 등 | canvas 박지 않음 |
-| `folder_phase` | `_WorkLog/` | `직능분석/_WorkLog` | PHASE 파일 안 박음 |
-| `folder_raw` | `raw/` | `archive` 등 | raw 빌드 건너뜀 |
-
-**`__unmapped__` 의미** (v0.3 신규):
-- 폴더 변수 값으로 `__unmapped__` 박으면 그 폴더 관련 *모든 작업을 건너뜀*
-- 신설하지 않음, 읽지 않음, 빌드하지 않음
-- archive vault에서 유용 (예: `folder_wiki: __unmapped__` — 위키 빌드 자체 건너뜀)
-
-## Stage 0 — 진입 모드 감지 + 자동 트랙 결정 (healthcheck + v0.5 자동 설치 + v0.6 자동 분기)
-
-1. `scripts/healthcheck.ps1` 실행 — Obsidian CLI 활성, kepano 5종, defuddle 확인
-   - **v0.5**: 의존성 부족 시 `scripts/install-deps.ps1` 자동 호출 (winget·npm·git clone)
-   - 자동 설치 후 healthcheck 재실행. `-NoAutoInstall` 플래그로 비활성 가능.
-2. 작업 대상 vault 경로 결정 (사용자 메시지에 없으면 질문)
-3. **vault 상태 3분기 검사**:
-   - `_meta/persona.md` **존재** → **LOAD** 모드
-   - 부재 + vault 거의 비어있음 → **CREATE** 모드
-   - 부재 + 기존 폴더·파일 다수 → **ADOPT** 모드
-4. **v0.6.0 자동 트랙 결정** — healthcheck.ps1이 vault 규모(`.md` 수·사용자 폴더 수)를 측정해 트랙 추천:
-
-   | 측정값 | 자동 트랙 | 모드 | 박는 파일 | 셋업 |
-   |---|---|---|---|---|
-   | `.md < 10` & `folders < 1` | **T0 Tiny** ✨ | CREATE | persona.md 1파일 | 2분 |
-   | `.md 10~30` & `folders < 3` | T1 Casual | CREATE | persona + 일관성카드 | 5분 |
-   | `.md 30~100` & `folders < 3` | T2 Structured | CREATE | + dashboard.base | 10분 |
-   | `.md 100~300` & `folders < 3` | T2 Full | CREATE | + lint.base | 15분 |
-   | `.md ≥ 300` OR `folders ≥ 3` | T2-A ADOPT | ADOPT | 4파일 + 폴더 매핑 | 20~30분 |
-
-   사용자 오버라이드: `/claude-wiki-obsidian-vault-코어4 T2 강제` 같이 명시하면 자동 추천 무시.
-
-5. **호출 의도 우선순위 (자동 트랙 위에 덮어쓰기)**:
-   - `저장해` 류 → **T1 캐주얼** 강제
-   - `archive vault 흡수` → T2-A + vault_role=archive 강제
-   - `RAG 준비해` → **T3 RAG-ready** 강제
-   - `승급` (LOAD + T0_Tiny 상태에서만) → T0 → T2 승급 절차
-   - 명시 트리거 없으면 자동 추천 트랙 사용
-
-6. **vault_role 추정** (v0.3):
-   - LOAD 모드 → persona.md frontmatter의 `vault_role` 값 로드
-   - T0 Tiny·T1·T2 CREATE 모드 → 디폴트 `active`
-   - T2-A ADOPT 모드 → 사용자에게 R1 질문
-
-7. **T0 → T2 자동 승급 안내** (v0.6.0): LOAD + `track: T0_Tiny` + `.md ≥ 30`이면 healthcheck.ps1이 자동 안내 출력. 사용자가 *"승급"* 한 마디 하면 T0 → T2 승급 절차 진입.
-
-8. PHASE 파일 생성: `{folder_phase}/YYYY_MM_DD__HH.MM_PHASE_{vault명}_부트스트랩.md` (T0 Tiny에서는 PHASE 파일 생략 — 셋업 4단계뿐이라 불필요)
-
-## Stage 1 — 페르소나 (T0 Tiny / CREATE / LOAD / ADOPT)
-
-### T0 Tiny 분기 — 작은 vault (v0.6.0 신규)
-**질문 3종만** (Q1·Q2·Q3). Q4·Q5·Q6·R1·F1~F6 모두 디폴트. `templates/persona_meta_tiny.md` 사용. 결과 `_meta/persona.md`의 frontmatter에 `track: T0_Tiny` 박힘.
-
-### CREATE 분기 — 신규 vault
-질문 5종 + 보조 1종 (sensitive). 폴더 변수 6종은 디폴트 사용.
-
-### ADOPT 분기 — 기존 vault 흡수
-질문 5종 + 보조 1종 + **vault_role 질문 1종** + **폴더 매핑 질문 6종**.
-
-폴더 매핑 시 사용자가 `__unmapped__` 응답 가능. 예시:
-```
-F1. 본인 vault의 위키 폴더는?
-   A. _위키        ← 폴더 있음·매핑
-   B. (없음)        ← __unmapped__
-```
-
-vault_role=archive면 *F1~F6 중 __unmapped__ 비율이 높은 게 정상*. archive는 새 작업 안 함.
-
-### LOAD 분기 — 기존 vault (이미 슈퍼스킬 부트스트랩됨)
-`_meta/persona.md` 읽어 모든 변수(어휘 3종 + 폴더 6종 + vault_role) 자동 적재.
-
-## Stage 2 — vault 시딩
-
-### vault_role별 시딩 정책
-
-| vault_role | _meta/* 관리 파일 (4종) | 사용자 콘텐츠 폴더 |
-|---|:---:|:---:|
-| **active** | ✅ 4파일 신설 (persona·일관성카드·dashboard.base·lint.base) | 매핑된 폴더만 (T2-A) 또는 디폴트 신설 (T2). 콘텐츠 폴더 *내부에는* 사용자 승인 후에만 |
-| **archive** | ✅ 4파일 신설 (lint.base는 orphan만 의미 — stale/conflict는 archive 정신상 무의미) | ❌ **사용자 콘텐츠 폴더에는 새 파일 신설 금지** (archive는 보관소) |
-| **hybrid** | ✅ 4파일 신설 | active 폴더만 신설. `__unmapped__`인 archive 폴더는 *완전 건너뜀* |
-
-**T2-A(ADOPT) 안전 원칙** (v0.4 표현 통일):
-- **사용자 콘텐츠 폴더에는 새 파일 신설 금지** — `_meta/` 관리 파일 4개만 신설 OK (모든 vault_role 공통)
-- `__unmapped__`로 박힌 폴더는 *완전 건너뜀* (신설·읽기·빌드 모두 X)
-- 본인 폴더로 매핑된 폴더는 **미수정**
-- archive vault: 4 관리 파일 신설 OK, 사용자 콘텐츠 폴더는 절대 미수정
-
-## Stage 3 — raw 1·2차 빌드 (active·hybrid만)
-
-vault_role=archive는 Stage 3 자체를 건너뜀 (archive는 빌드 안 함).
-
-### 3A — 1차 빌드
-`{folder_raw}`가 `__unmapped__`면 건너뜀. 아니면 prompts/first_build.md 절차.
-
-### 3B — 2차 점검 (사용자 승인 게이트 ⚠️)
-`lint.base` 결과 + 5규칙 위반 체크리스트 → 사용자 OK 받기 전 적용 금지.
-
-### 3C — 적용
-승인 받으면 `obsidian-cli rename` + `property:set` + wikilink 교정.
-
-### 3D — 빌드 후 자가측정 (수렴 루프)
-3C 적용 후 `healthcheck.ps1`로 ① frontmatter 누락 .md 수 ② orphan(역링크 0) 수 ③ `[확인 필요]` 마커 잔존 수를 *자동 측정*한다. ①+②+③ 합이 임계(기본 5) 초과면 — 부족 항목만 골라 **3A로 재진입**(→ 3B 승인 게이트 → 3C). 최대 2회 후에도 초과면 잔존 목록을 사용자에게 보고하고 정지(무한루프 방지). *측정·재빌드 후보 산출은 자동이되, 본문 변형의 최종 적용은 보호규칙 2대로 사용자 승인 후.*
-
-> **본문 변형 면제 조항**: 보호규칙 1(`{folder_raw}` 미수정)은 `{folder_raw}` 폴더만 적용된다. `{folder_wiki}`·`{folder_who}`·`{folder_topic}` 본문은 사용자 승인 후 **3종 최소 변형**만 허용 — ① 첫 줄 요약 삽입 ② 역방향 wikilink 줄 제거 ③ `[확인 필요]` 마커 추가.
-
-## 트랙별 단축 진입
-
-### T0 — Tiny (v0.6.0 신규, 자동 추천 .md < 10)
-Stage 0(CREATE) → 1(T0 Tiny: Q1·Q2·Q3 3종) → `prompts/t0_tiny_build.md` 4단계 → 완료.
-- 박는 것: `_meta/persona.md` 1파일 + 기존 .md에 frontmatter 보강
-- 안 박는 것: 일관성카드·dashboard·lint·raw 폴더
-- 셋업 시간: 2분
-- vault가 30+ 노트로 자라면 LOAD 모드에서 T2 승급 자동 안내
-
-### T1 — 캐주얼 "저장해" (active·hybrid)
-Stage 0(LOAD) → frontmatter 박기 → `{folder_raw}/{프로젝트명}/...` 저장 → reload.
-`vault_role=archive`면 T1 자체 차단 (archive 정신 위배). 사용자에게 안내: "archive vault에는 저장 안 합니다. 활성 vault 사용하세요."
-
-### T2 — 구조화 부트스트랩 (CREATE 모드 전용)
-Stage 0 → 1(CREATE) → 2 → 3 전체.
-
-### T2-A — 흡수 (ADOPT 모드, v0.2)
-Stage 0 → 1(ADOPT, 폴더 매핑·vault_role 질문) → 2(메타만 + 매핑된 폴더만) → (Stage 3는 active만).
-
-### T3 — RAG-ready 셋업
-Stage 0 → 1 → 2(+ wiki-first.base) → 3.
-
-### T0 → T2 승급 절차 (v0.6.0 신규)
-LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30` 감지 시 healthcheck가 자동 안내. 사용자가 *"승급"* 한 마디:
-1. 기존 `_meta/persona.md`의 `track: T0_Tiny` → `T2_Structured` 변경
-2. 추가 질문 4개 (kind_examples·sensitive·vault_role·폴더 매핑)
-3. `_meta/일관성카드.md` + `dashboard.base` + (필요 시 `lint.base`) 신설
-4. Stage 3 1·2차 빌드 절차로 이관 가능
-
-승급 시간: 약 10분.
-
-## kepano 5종 호출 매트릭스
-
-| Stage | markdown | bases | canvas | cli | defuddle |
-|---|:---:|:---:|:---:|:---:|:---:|
-| 0 healthcheck       |   |   |   | ● |   |
-| 1 페르소나 CREATE/ADOPT | ● |   |   | ● |   |
-| 2 일관성카드         | ● |   |   |   |   |
-| 2 dashboard.base    |   | ● |   |   |   |
-| 2 lint.base         |   | ● |   |   |   |
-| 2 관계도.canvas (archive 제외) |   |   | ● |   |   |
-| 3A 1차 빌드          | ● |   |   |   | ● (URL) |
-| 3B 2차 점검          |   | ● |   |   |   |
-| 3C 2차 적용          | ● |   |   | ● |   |
-| T1 "저장해"          | ● |   |   | ● |   |
-
-## 본문 ↔ 부속파일 정합성 체크리스트 (v0.3 신규)
-
-본문의 *어떤 항목을 바꾸면 어떤 부속 파일도 동시에 갱신해야 하는지* 매핑. SKILL.md 본문을 수정한 LLM은 이 체크리스트를 매번 확인.
-
-| SKILL.md 본문 항목 | 동시 갱신 필요 부속 파일 |
+| 실패 | 막는 방법 |
 |---|---|
-| Stage 0 모드 분기 (CREATE/LOAD/ADOPT/vault_role) | `scripts/healthcheck.ps1` 감지 로직 |
-| Stage 0 자동 트랙 결정 (v0.6.0 신규) | `scripts/healthcheck.ps1` 5단계 if/elseif + T0→T2 승급 안내 |
-| Stage 1 질문 시퀀스 (Q1~Q6 + F1~F6 + vault_role) | `templates/persona_meta.md` |
-| Stage 1 T0 질문 시퀀스 (Q1·Q2·Q3 3종) | `templates/persona_meta_tiny.md` |
-| 폴더 변수 정의·디폴트 | `templates/persona_meta.md` frontmatter + `templates/persona_meta_tiny.md` 디폴트 + `templates/일관성카드.md` 보호규칙 + `templates/dashboard.base`·`templates/lint.base` displayName |
-| 1차 빌드 절차 (3A) — T1~T3 | `prompts/first_build.md` |
-| T0 Tiny 빌드 절차 (4단계) | `prompts/t0_tiny_build.md` |
-| 2차 빌드 절차 (3B·3C) | `prompts/second_build.md` |
-| 보호규칙 (raw 미수정·3종 변형 면제 등) | `templates/일관성카드.md` 보호규칙 + `prompts/second_build.md` 면제 조항 + `prompts/t0_tiny_build.md` T0 전용 규칙 |
-| vault reload 명령 | `scripts/postsetup_refresh.ps1` |
+| AI가 파일명을 줄여 써 링크가 끊김 | 원문에 `[S1]` 슬롯 번호만 주고 그 번호로만 인용하게 한다. 실제 파일명은 프로그램이 대응시킨다. AI는 파일명을 볼 일이 없다 |
+| 회차마다 머리말·항목이 중복 누적 | 머리말은 코드가 만든다. 기존 노트를 입력에 넣을 때 프런트매터·제목·안내문을 걷어내고 본문만 넣는다 |
+| 링크는 열리는데 내용이 무관 | 작성이 끝나면 **별도 호출**이 각 항목과 그 항목이 인용한 원문만 놓고 대조한다. 관련성·수치·조건, 제안을 확정으로 바꿔 썼는지를 본다 |
 
-**자기점검 절차** (본문 변경 LLM 의무):
-1. 본문 변경 시 위 표에서 해당 항목 찾기
-2. 매핑된 부속 파일이 변경에 정합한지 확인
-3. 미정합 발견 시 부속 파일도 *같은 응답*에서 갱신
-4. 정합성 자기 검증 결과를 응답에 명시
+검증 실패 시 최대 2회 재작성한다. 그래도 통과하지 못하면 `topics/_미확정.md`로 격리한다. **미확정 항목은 코퍼스에서 제외되어 다음 답변의 근거로 쓰이지 않는다.** 관련 자료가 더 들어오면 다음 회차에 다시 검토된다.
 
-**Why 명시**: v0.2.0에서 본문은 ADOPT 모드 3분기를 선언했으나 healthcheck.ps1은 2분기 구현. Cross Validator(서브에이전트)가 발견. *본문↔부속 정합성 체크리스트 부재가 원인*. v0.3에서 이 체크리스트를 본문에 박아 재발 차단.
+주제 노트를 덮어쓰기 전에 이전본을 `topics/_history/`에 남긴다. 잘못된 갱신은 되돌릴 수 있다.
 
-## 보호 규칙 (절대 위반 금지)
+인프라 장애(구독 한도·인증 오류)로 실패하면 **저장을 보류하고 커서를 전진시키지 않는다.** 그 기간의 기록이 영영 안 읽히는 일을 막는 자리다.
 
-1. **`{folder_raw}` 원본 미수정 + 내부 신설 금지** — 1글자도 안 바꿈 + **새 파일·하위 폴더 신설 금지**. `{folder_raw}`는 사용자가 부트스트랩 시점에 박은 *원본 자료만* 들어간다. 외부 자료·시뮬레이션 시드·LLM 산출·메모 등 *어떤 것도* `{folder_raw}` 안에 박지 않는다 — vault 루트의 별도 폴더(예: `external/`, `sim_seed/`, `_outputs/`)에 박는다. wiki·who·topic 본문은 3C 단계 사용자 승인 후 **3종 최소 변형**만.
-2. **자기 검증 금지** — 2차 빌드는 반드시 사용자 승인 후 적용.
-3. **sensitive:true vault** — 클라우드 동기화 금지 경고.
-4. **한글 멀티라인** 파일시스템 직접 쓰기 (`obsidian-cli create` 회피).
-5. **새 vault를 기존 vault 하위에 두지 않음**.
-6. **PHASE 파일은 Stage 완료 즉시 체크박스 업데이트**.
-7. **하드코딩 페르소나 4종 금지**.
-8. **파일경로 표시는 폴더/파일명 분리**.
-9. **ADOPT 모드 본인 폴더 미수정** (매핑된 폴더 자동 변경 안 함).
-10. **`__unmapped__` 폴더는 완전 무시** (v0.3 신규) — 신설·읽기·빌드 모두 안 함.
-11. **vault_role=archive 시 Stage 3 차단** (v0.3 신규) — 빌드 자체 안 함.
-12. **본문 ↔ 부속파일 정합성 체크리스트 매번 점검** (v0.3 신규) — 본문 수정 시 의무.
+## 4. ⑤ 구조화 — 볼트에 틀과 연결을 입힌다
 
-## 출처
+이 단계는 지식의 내용을 새로 만들지 않는다. 이미 있는 노트에 분류와 링크만 더한다.
 
-- Oh My Wiki (5규칙·4축·페르소나 메타): https://github.com/simonsez9510/oh-my-wiki
-- 본인 운영 패턴: 사용자의 Obsidian Vault 디렉터리 (예: `{사용자_드라이브}/Claude-Wiki/llmwiki-obsidian-guide` 형태로 본인 환경에 매핑)
-- wiki-e-rag (L1·L2): RAG-ready Obsidian Vault 트랙 — 사용자 프로젝트 docs/ 또는 별도 vault 폴더에 구축
-- kepano 5종: https://github.com/kepano/obsidian-skills
-- 통합 다이어그램: https://claude-wiki-obsidian-vault-diagrams.vercel.app/
-- 본 스킬 폴더 다이어그램: `claude-wiki-obsidian-vault-architecture.svg`
-- **공식 GitHub repo**: https://github.com/SUNWOONGKYU/claude-wiki-obsidian-vault
-- **외부 검증**: 원성묵 원장 (Oh My Wiki 원천 IP 보유자) Mook-Wiki vault(341 .md, archive) 풀 시뮬레이션 — v0.3 기능(vault_role + __unmapped__) 제안 채택.
+### 일관성 5규칙 (`templates/일관성카드.md`)
+1. **네이밍** — 노트 제목에 검색어 포함
+2. **태그 4축** — `time` · `who` · `topic` · `kind`
+3. **링크 방향** — 구체 → 추상 한 방향 (역방향은 옵시디언 백링크가 보여준다)
+4. **요약 1줄** — 첫 줄에 "이 노트는 X에 대한 Y이다"
+5. **불완전 마커** — `[확인 필요]` · `[질문]`
+
+규칙 1과 4가 ⑥의 검색을 떠받친다. 벡터 검색 없이도 제목과 첫 줄만으로 상당히 걸리는 이유다.
+
+### 트랙 자동 결정
+`scripts/healthcheck.ps1`이 볼트 규모(`.md` 수·폴더 수)를 재서 트랙을 정한다. 작은 볼트에 큰 절차를 씌우지 않는다.
+
+| 측정값 | 트랙 | 박는 것 |
+|---|---|---|
+| `.md < 10` & 폴더 < 1 | T0 Tiny | persona.md 1개 |
+| 10~30 | T1 Casual | + 일관성카드 |
+| 30~100 | T2 Structured | + dashboard.base |
+| 100~300 | T2 Full | + lint.base |
+| ≥ 300 또는 폴더 ≥ 3 | T2-A ADOPT | 폴더 매핑 + 메타만 |
+
+### 승인 대신 자동 검증 (옵신에서 바뀐 지점)
+옵신의 2차 빌드는 "사용자 승인 후 적용"이었다. 지축신은 ④와 같은 방식을 쓴다. 정상 항목은 곧바로 반영하고, 원문과 어긋나는 항목만 `[확인 필요]` 마커를 달아 격리한다. 사람을 기다리며 지식이 멈추지 않는다.
+
+## 5. 보호 규칙 (절대 위반 금지)
+
+1. **원본 미수정** — `{folder_raw}`의 원본은 1글자도 바꾸지 않는다. 요약이 의심스러울 때 대조할 것이 있어야 한다.
+2. **시스템 폴더 기록 금지** — Windows·Program Files·ProgramData 아래에서 실행된 세션은 그 경로에 기록하지 않는다. 실측에서 두 달간 358개가 시스템 폴더에 쌓인 사례가 있었다.
+3. **세션당 위키 노트 1개** — 한 세션이 여러 번 끝나도 최신 1개만 남긴다. 실측에서 한 세션이 27개를 만든 사례가 있었다.
+4. **미확정 항목을 확정 근거로 쓰지 않는다.**
+5. **AI가 원문을 확인했다는 이유만으로 원문 속 주장을 사실로 승격시키지 않는다.**
+6. **한 번의 경험을 조건 없이 일반 원칙으로 쓰지 않는다.** 성립 조건을 함께 적는다.
+7. **파일 경로 표시는 폴더와 파일명을 분리한다.**
+8. **sensitive: true 볼트는 클라우드 동기화를 경고한다.**
+
+## 6. 설치
+
+```
+node scripts/install.js          설치
+node scripts/install.js --check  상태 확인
+node scripts/install.js --uninstall  훅 등록만 해제
+```
+
+훅을 `~/.claude/hooks/`로 복사하고 `~/.claude/settings.json`에 필요한 항목만 추가한다. 기존 설정은 지우지 않고, 이미 등록된 항목은 다시 넣지 않는다. 수정 전에 백업한다.
+
+필요한 것: Windows · Node.js · Claude Code CLI(구독 로그인). API 키는 쓰지 않는다.
+선택: 옵시디언 1.12.7+ (⑤ 구조화를 쓸 때만), kepano 옵시디언 스킬 5종.
+
+## 7. 완료 판정
+
+파일이 생긴 것은 완료가 아니다. 아래가 실제로 되어야 완료다.
+
+- 작업 대화를 한 번 끝내면 `sessions/raw/`와 `sessions/wiki/`에 기록이 생긴다
+- 두 번 연속 실행해도 머리말·항목·훅이 중복되지 않는다
+- 무관한 근거를 의도적으로 섞으면 자동 수정되거나 미확정으로 격리된다
+- **새 대화에서 이전 결정의 이유와 원문 근거를 실제로 찾아 답한다**
+
+## 8. 출처
+
+- Oh My Wiki (5규칙·태그 4축·페르소나 메타): https://github.com/simonsez9510/oh-my-wiki — 원성묵. MIT.
+- LLM Wiki 발상: 안드레 카파시 (2026-04)
+- kepano 옵시디언 스킬 5종: https://github.com/kepano/obsidian-skills
+- 선행 판본: 옵신-claude-wiki-obsidian-vault v0.6.2
 
 ## 변경 이력
 
-- **0.6.2 (2026-06-17)** — **Stage 3D 자가측정 수렴 루프 신설** (자율 루프 보강): 3C 적용 후 healthcheck로 frontmatter 누락·orphan·`[확인 필요]` 잔존을 자동 측정 → 임계 초과 시 부족 항목만 3A 재진입(최대 2회) → 수렴/정지. 측정은 자동, 최종 적용은 보호규칙 2(승인 게이트) 유지.
-- **0.6.1 (2026-05-29)** — **별칭 "옵신 (지식의 신)" 정식 부여** (PO 결정 — 별칭 시스템 정합):
-  - SKILL.md `name` 필드 `claude-wiki-obsidian-vault-코어4` → `옵신-claude-wiki-obsidian-vault`
-  - `description` 맨 앞에 "★ 별칭 옵신 (지식의 신) ★" 박음
-  - 트리거 어휘에 "옵신", "옵신아" 추가
-  - `metadata.alias: 옵신` 박음
-  - 폴더명도 동일 리네임 (`코어4` 접미 제거 + `옵신-` 접두 추가)
-  - 형제 별칭: 에신(에이전트의 신) — `에신-llm-dependent-agent-create` (skill-create-코어5 형제 공장)
-  - **Why**: 4 사신(청룡·백호·주작·현무) 외에 본 슈퍼스킬과 에신을 *신적 별칭 시스템*에 정식 편입. 사용자가 짧은 별칭("옵신아")으로 호출 가능. PO가 다른 Claude Code 세션에서 G드라이브 백업에 먼저 박은 변경을 활성·GitHub에 풀 정합.
-
-- **0.6.0 (2026-05-29)** — **자동 트랙 분기 + T0 Tiny 신설** (PO 결정 "자동으로 분기"):
-  - **T0 Tiny 트랙 신설** — 작은 vault(`.md < 10` & `folders < 1`) 전용. `_meta/persona.md` 1파일만 박음, 셋업 2분.
-  - **healthcheck.ps1 자동 트랙 결정 로직** — vault 규모 측정해 T0/T1/T2 Structured/T2 Full/T2-A 자동 추천 (5단계 if/elseif). 사용자 오버라이드 가능.
-  - **T0 → T2 자동 승급 안내** — LOAD 모드 + `track: T0_Tiny` + `.md ≥ 30`이면 healthcheck가 승급 추천 출력. *"승급"* 한 마디로 진행.
-  - **신규 부속파일**: `templates/persona_meta_tiny.md` (Q1·Q2·Q3 3종) + `prompts/t0_tiny_build.md` (4단계 빌드).
-  - **본문 ↔ 부속파일 정합성 체크리스트 갱신** — T0 관련 항목 4개 추가.
-  - **트리거 추가**: "승급" (LOAD + T0 상태에서만).
-  - **Why**: 작은 vault에 풀 슈퍼스킬 적용 = "소 잡는 칼" 문제. 셋업 30~60분 vs 산출 가치 비용 역전. 자동 분기로 사용자 의사결정 부담 없이 적합 트랙 진입.
-
-- **0.5.2 (2026-05-28)** — 보호규칙 1 강화: `{folder_raw}` 원본 미수정 *외에도* 내부에 **새 파일·하위 폴더 신설 금지** 명시. 외부 자료·시드·LLM 산출은 vault 루트 별도 폴더로(`external/`, `sim_seed/`, `_outputs/` 등). 원인: BuzzLab for Company vault 시딩 중 LLM이 `raw/external/`, `raw/sim_seed/`를 raw 내부에 박아 PO가 지적 → 재발 차단.
-
-- **0.5.1 (2026-05-28)** — **다른 Claude Code 외부 검증 8건 fix** (Critical 2 + High 2 + Medium 2 + Low 2):
-  - **C-1 (Critical)**: SKILL.md frontmatter `version: 0.4.0` → `0.5.1` (v0.5.0 미반영분 + 본 패치 동시) + 변경이력 박기
-  - **C-2 (Critical)**: G드라이브 `SAL_Grid_Dev_Suite_Template/.claude/skills/claude-wiki-obsidian-vault-코어4/` 에 v0.5.1 통째 sync (v0.5.0 누락분 포함)
-  - **H-1 (High)**: `install-deps.ps1`에 `obsidian-cli` npm 자동 설치 추가 (`npm install -g obsidian-cli`)
-  - **H-2 (High)**: `install-deps.ps1`에 `codex` npm 자동 설치 추가 (`npm install -g @openai/codex`)
-  - **M-1 (Medium)**: kepano 5종 git clone 후 "Claude Code 재시작 필요" 안내 추가 (신규 스킬 인식 위해)
-  - **M-2 (Medium)**: Obsidian "Enable CLI" 토글 자동 검증·박기 — `%APPDATA%\obsidian\obsidian.json`의 `"cli":true` 직접 편집
-  - **L-1 (Low)**: `healthcheck.ps1` → `install-deps.ps1` 호출 시 `-Skip*`/`-Force` 옵션 전달 (이미 설치된 부분 스킵)
-  - **L-2 (Low)**: 자동 설치 성공 후 `healthcheck.ps1` 자기 재호출 (`-NoAutoInstall`) — 사용자 수동 실행 X
-
-- **0.5.0 (2026-05-28)** — **의존성 자동 설치 박기** (PO 지적 반영):
-  - `scripts/install-deps.ps1` 신규 — Obsidian(winget) + defuddle(npm) + kepano 5종(git clone) 자동 시도
-  - `scripts/healthcheck.ps1` 보강 — 실패 시 install-deps 자동 호출 (`-NoAutoInstall`로 비활성)
-  - SKILL.md Stage 0 본문 갱신 — 자동 설치 단계 명시
-  - **Why**: v0.4까지는 의존성 부족 시 수동 안내만 — PO가 매번 수동 처리 부담. v0.5는 winget/npm/git 자동 시도 + 실패 시만 수동 안내.
-
-- **0.4.0 (2026-05-28)** — Codex(GPT) 외부 검증 88/100 반영. v0.3.0 자기모순·미완 5건 해소:
-  - **High-1 해소**: `first_build.md` `## 관련` 자리표시자 wikilink 예시 제거 — 같은 파일의 "자리표시자 금지" 규칙과 자기모순이었음
-  - **High-2 해소**: `first_build.md` Stage 3A 0번 사전 검증 신설 — `folder_raw`/`folder_who`+`folder_topic`/`vault_role=archive` 시 1차 빌드 *전체 차단*. 부분 차단 규칙도 명시
-  - **Medium-1 해소**: `healthcheck.ps1` ADOPT 출력에 R1(vault_role) + Q6(sensitive) 질문 안내 추가 — SKILL.md/persona_meta와 일치
-  - **Medium-2 해소**: archive 정책 문구 통일 — "사용자 콘텐츠 폴더 신설·수정 금지, `_meta/` 관리 파일 4개만 신설"
-  - **Medium-3 해소**: 외부 검증 세트에 dashboard.base·lint.base·postsetup_refresh.ps1 포함 (Round 5에 적용)
-  - Low 2건은 v0.4.1로 이관 (healthcheck 정규식 견고화, 일관성카드 버전 표기)
-- 0.3.0 (2026-05-27) — 원성묵 원장 외부 검증 의견 반영:
-  - **vault_role 옵션** (`active` / `archive` / `hybrid`) — vault 성격별 작업 분기
-  - **`__unmapped__` 키워드 정식 지원** — 폴더 변수 값으로 박으면 그 폴더 작업 건너뜀
-  - **변수 치환 규칙** 본문에 명시 (who_label·topic_label·kind_examples 정의·치환 시점)
-  - **본문 ↔ 부속파일 정합성 체크리스트** 신설 — v0.2.0 healthcheck Critical GAP 같은 재발 차단
-  - 보호규칙 10·11·12 추가
-- 0.2.2 (2026-05-27) — templates/dashboard.base + templates/lint.base 정식 템플릿화
-- 0.2.1 (2026-05-27) — healthcheck ADOPT 감지 + 위성 5문서 변수화
-- 0.2.0 (2026-05-27) — ADOPT 모드 + T2-A 트랙 + 폴더 변수 6종 (사용자 실 vault 분석 사례 반영)
-- 0.1.0 (2026-05-27) — 초기 작성 (SVG v2.1.1 + 검증 100점)
+- **v1.0.0 (2026-09-10)** — 옵신에서 지축신으로. 5단계 단독 → 여섯 단계 통합. 승인 대기열 제거 후 자동 검증·재시도·미확정 격리 도입. 슬롯 인용으로 링크 깨짐 원천 차단. 시스템 폴더 기록 금지·세션당 노트 1개 보호 규칙 신설. `scripts/install.js`로 훅 등록 자동화.
