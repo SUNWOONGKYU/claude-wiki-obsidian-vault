@@ -37,8 +37,20 @@ const isInfraError = (t) => !!t && INFRA_RE.test(t);
 const THRESHOLD = 5;        // 미처리 노트가 이만큼 쌓이면 자동 실행
 const MAX_INPUT = 90000;    // 입력 상한(자)
 const MAX_RETRY = 2;        // 검증 실패 시 재작성 횟수 상한
-const TOPICS = ['결정', '패턴', '함정'];
 const MODEL = 'claude-sonnet-4-6';
+const MAX_TOPICS = 8;       // 섹션이 많아질수록 마커를 놓칠 확률이 오른다. 상한을 둔다.
+
+// 주제 목록. 프로젝트마다 쌓이는 지식의 결이 다르므로 sessions/topics.config.json 으로 덮어쓸 수 있다.
+//   { "topics": [ { "name": "용어", "desc": "terms: ..." }, ... ] }
+// desc 는 작성 지시에 그대로 들어간다. 이름만 주면 이름을 설명으로 쓴다.
+const DEFAULT_TOPICS = [
+  { name: '결정', desc: 'decisions: what was decided, on what grounds, under what condition it would be revisited' },
+  { name: '패턴', desc: 'patterns: approaches that worked repeatedly, with the conditions under which they held' },
+  { name: '함정', desc: 'pitfalls: what went wrong; the signal that predicts it and how to avoid it go on the 추정: line unless the source states them' },
+  { name: '사실', desc: 'measured facts: numbers, dates, versions, sizes actually observed — the raw values later work will need' },
+  { name: '도구', desc: 'tools and environment: what is installed, how it is invoked, what it costs, what it cannot do' },
+  { name: '미해결', desc: 'open questions: what is still unknown or unfinished; what would settle it goes on the 추정: line unless the source states it' }
+];
 
 const cwd = process.argv[2];
 const FORCE = process.argv.includes('--force');
@@ -52,6 +64,26 @@ const historyDir = path.join(topicsDir, '_history');
 const statePath = path.join(sessionsDir, '.topic-distill.state.json');
 const logFile = path.join(sessionsDir, '.topic-distill.log');
 const lockPath = path.join(sessionsDir, '.topic-distilling');
+const topicConfigPath = path.join(sessionsDir, 'topics.config.json');
+
+// 주제 목록 확정 — 설정이 있으면 그걸 쓰고, 없거나 깨졌으면 기본값으로 돌아간다.
+// 주제를 바꿔도 옛 주제 노트는 지우지 않는다. 그냥 갱신 대상에서 빠질 뿐이다.
+const TOPIC_DEFS = (() => {
+  try {
+    const raw = JSON.parse(fs.readFileSync(topicConfigPath, 'utf8'));
+    const list = (Array.isArray(raw) ? raw : raw.topics) || [];
+    const out = [];
+    for (const t of list) {
+      const name = String(typeof t === 'string' ? t : (t && t.name) || '').trim();
+      if (!name || /[\\/:*?"<>|@]/.test(name)) continue;      // 파일명·마커로 쓸 수 없는 이름은 버린다
+      if (out.some(o => o.name === name)) continue;
+      out.push({ name, desc: String((t && t.desc) || name).trim() });
+      if (out.length >= MAX_TOPICS) break;
+    }
+    return out.length ? out : DEFAULT_TOPICS;
+  } catch (e) { return DEFAULT_TOPICS; }
+})();
+const TOPICS = TOPIC_DEFS.map(t => t.name);
 
 function log(m) {
   try {
@@ -114,6 +146,7 @@ function main() {
   if (!FORCE && fresh.length < THRESHOLD) { log(`새 노트 ${fresh.length}개 < 임계 ${THRESHOLD} — 대기`); return; }
   if (!acquireLock()) { log('다른 2차 증류가 실행 중 — 건너뜀'); return; }
   process.on('exit', releaseLock);
+  log(`주제 ${TOPICS.length}개: ${TOPICS.join('·')} (${fs.existsSync(topicConfigPath) ? 'topics.config.json 적용' : '기본값'})`);
 
   if (!fs.existsSync(topicsDir)) fs.mkdirSync(topicsDir, { recursive: true });
   if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true });
@@ -168,10 +201,9 @@ function main() {
   const WRITE_PROMPT = [
     'The input contains (a) EXISTING topic notes and (b) NEW session notes, each wrapped in a slot header like [S1].',
     'First detect the input main language, then write ALL output in that same language.',
-    'SECOND-STAGE DISTILLATION: read ACROSS the session notes and reorganize their knowledge into exactly three topic notes:',
-    '@@@결정@@@ (decisions: what was decided, on what grounds, under what condition it would be revisited),',
-    '@@@패턴@@@ (patterns: approaches that worked repeatedly, with the conditions under which they held),',
-    '@@@함정@@@ (pitfalls: what went wrong, the signal that predicts it, how to avoid it).',
+    `SECOND-STAGE DISTILLATION: read ACROSS the session notes and reorganize their knowledge into exactly ${TOPICS.length} topic notes:`,
+    TOPIC_DEFS.map(t => `@@@${t.name}@@@ (${t.desc})`).join(', ') + '.',
+    'A section with nothing to say must still appear, with no entries under it.',
     'RULES.',
     '1) MERGE, do not append: if an existing entry covers the same thing, merge into it rather than duplicating.',
     '2) UPDATE superseded entries: if newer sessions changed the conditions, revise and keep the old state distinguishable from the current one.',
@@ -181,8 +213,21 @@ function main() {
     '6) CITATION FORMAT — this is critical. End every entry with the slot tags it came from, exactly like [S1] or [S2][S5].',
     'Use ONLY slot tags that appear in the input. Never write a file name, never invent a tag, never abbreviate.',
     '7) Preserve every existing entry unless merged or superseded. Do not silently drop knowledge.',
-    'Format each entry as ## followed by a short title, then the body, then the slot tags on their own last line.',
-    'Output exactly three sections, each marker alone on its own line, in the order 결정, 패턴, 함정. No preamble.'
+    '8) SEPARATE FACT FROM INFERENCE — this decides whether the entry survives verification.',
+    'Write first only what the source actually states. Anything you added yourself — a signal to watch for,',
+    'a preventive measure, a generalization, a cause you inferred — goes at the end of the body on its own line',
+    'starting with the literal marker 추정: (one line, may hold several inferences).',
+    'Do not blend an inference into a factual sentence. An unlabelled inference fails the whole entry;',
+    'a labelled one is kept as an inference. Never drop a useful inference just to be safe — label it.',
+    'TREAT AS INFERENCE unless the source states it in so many words: a signal to watch for (신호:), a preventive',
+    'measure (예방:), what would settle an open question, a suspected cause ("…가 원인으로 보인다"),',
+    'a conditional promise ("…하면 …할 수 있다", "…하면 예방/검증 가능하다"), and any rule generalized from one case.',
+    'EXAMPLE — source: a staging deploy failed twice because a secret name was mistyped.',
+    'Body: 스테이징에서만 환경변수가 비어 배포가 두 번 실패했다. 원인은 시크릿 이름 오타였다.',
+    'Then: 추정: 배포 전 환경변수 존재 여부를 자동 검증하면 예방할 수 있다.',
+    'Format each entry as ## followed by a short title, then the body, then the 추정: line if any,',
+    'then the slot tags on their own last line.',
+    `Output exactly ${TOPICS.length} sections, each marker alone on its own line, in the order ${TOPICS.join(', ')}. No preamble.`
   ].join(' ');
 
   attempt(1, null);
@@ -192,7 +237,8 @@ function main() {
     const prompt = feedback
       ? WRITE_PROMPT + ' RETRY NOTICE: a separate verifier rejected these entries because the cited source did not support them: '
         + feedback + '. Either fix them so every claim is supported by the cited slot, or drop the unsupported parts.'
-        + ' Keep all other entries. OUTPUT FORMAT IS UNCHANGED: the three markers @@@결정@@@ @@@패턴@@@ @@@함정@@@ each alone on its own line, in that order. Output nothing else.'
+        + ` Keep all other entries. OUTPUT FORMAT IS UNCHANGED: the ${TOPICS.length} markers `
+        + TOPICS.map(t => `@@@${t}@@@`).join(' ') + ' each alone on its own line, in that order. Output nothing else.'
       : WRITE_PROMPT;
 
     callClaude(prompt, input, 900000, (full, err, timedOut) => {
@@ -253,14 +299,20 @@ function main() {
 
     const VERIFY_PROMPT = [
       'You are a verifier. You did NOT write this. Check each claim against the source text quoted right under it.',
-      'For each entry [E1], [E2], ... judge:',
+      'SCOPE — an entry body may end with a line starting 추정: . That line is the distiller\'s own inference,',
+      'openly labelled as such, and is NOT under test. Judge ONLY the text before it.',
+      'Do not fail an entry because its 추정: line adds a signal, a preventive measure, a generalization or a suspected cause',
+      'that the source does not state. That is what the label is for.',
+      'For each entry [E1], [E2], ... judge the factual part:',
       '(a) RELEVANCE — does the cited source actually discuss this claim? A source that is about a different topic is a failure even if it exists.',
       '(b) FACTS — are numbers, dates, names, and stated conditions supported by the source?',
       '(c) STATUS — does the entry present a mere suggestion or proposal as if it were a settled decision? That is a failure.',
+      '(d) UNLABELLED INFERENCE — is there a signal, a preventive measure, a generalization or a cause asserted as fact',
+      'in the body ABOVE the 추정: line without support in the source? That is a failure; it belongs on the 추정: line.',
       'Output one line per entry, nothing else, in this exact form:',
       'E1 OK',
       'E2 FAIL reason in one short clause',
-      'Judge only what the quoted source supports. If the source does not support the claim, fail it. Do not be generous.'
+      'Judge only what the quoted source supports. If the source does not support a factual claim, fail it. Do not be generous.'
     ].join(' ');
 
     callClaude(VERIFY_PROMPT, vin, 600000, (vout, verr, vTimedOut) => {
@@ -374,14 +426,23 @@ function bodyOf(raw) {   // 프런트매터·제목·안내문을 걷어낸 본�
   const i = t.search(/^##\s/m);
   return i >= 0 ? t.slice(i).trim() : t.trim();
 }
+// 주제가 많아지면 빈 섹션 마커를 통째로 빠뜨리는 일이 생긴다. 하나도 못 찾았을 때만 형식 실패로 보고,
+// 빠진 섹션은 '이번에 쓸 것이 없었다'로 처리한다. 그 주제의 기존 노트는 삭제 금지 안전망이 지킨다.
 function parseSections(full) {
   const lines = full.split('\n');
-  const idx = {};
-  for (const t of TOPICS) idx[t] = lines.findIndex(l => l.trim() === `@@@${t}@@@`);
-  if (TOPICS.some(t => idx[t] < 0)) return null;
-  const bounds = TOPICS.map(t => idx[t]).concat([lines.length]);
+  const found = [];
+  for (const t of TOPICS) {
+    const i = lines.findIndex(l => l.trim() === `@@@${t}@@@`);
+    if (i >= 0) found.push({ topic: t, at: i });
+  }
+  if (!found.length) return null;
+  found.sort((a, b) => a.at - b.at);
   const out = {};
-  TOPICS.forEach((t, i) => out[t] = lines.slice(bounds[i] + 1, bounds[i + 1]).join('\n').trim());
+  for (const t of TOPICS) out[t] = '';
+  found.forEach((f, i) => {
+    const end = i + 1 < found.length ? found[i + 1].at : lines.length;
+    out[f.topic] = lines.slice(f.at + 1, end).join('\n').trim();
+  });
   return out;
 }
 function splitEntries(section) {
@@ -393,7 +454,10 @@ function splitEntries(section) {
     let body = (nl < 0 ? '' : b.slice(nl + 1)).trim();
     const slots = Array.from(body.matchAll(/\[(S\d+)\]/g)).map(m => m[1]);
     body = body.replace(/\[(S\d+)\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
-    if (title) out.push({ title, body, slots: Array.from(new Set(slots)) });
+    // 빈 섹션에 모델이 남기는 자리표시("## (해당 항목 없음)")는 지식이 아니다. 항목으로 세지 않는다.
+    if (!title || !body) continue;
+    if (/^[(（\[].*[)）\]]$/.test(title)) continue;
+    out.push({ title, body, slots: Array.from(new Set(slots)) });
   }
   return out;
 }
