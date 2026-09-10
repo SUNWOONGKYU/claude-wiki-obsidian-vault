@@ -121,10 +121,25 @@ function main() {
   // ── 입력 조립 ─────────────────────────────────────────────────────────
   // 핵심: 파일명을 프롬프트에 넣지 않는다. 슬롯 번호 [S1]..[Sn]만 준다.
   // AI가 파일명을 만들어 쓸 수 없으므로 링크가 깨질 여지가 사라진다.
+  // 기존 주제 노트는 입력으로도 넣고, 항목 단위로도 쪼개 둔다.
+  // 이미 확정된 항목은 이번 회차의 새 슬롯으로 다시 입증할 방법이 없다(근거가 된 옛 노트는
+  // 이미 처리돼 슬롯에 없다). 그대로인 항목을 다시 검증하면 반드시 반려되고, 그러면
+  // 회차마다 옛 지식이 지워진다. 그래서 '그대로인 항목'은 검증을 면제하고 링크를 보존한다.
   let existing = '';
+  const prior = new Map();     // 제목키 → {topic, title, body, links}
+  const priorOrder = [];       // 기존 노트에 실려 있던 순서
   for (const t of TOPICS) {
     const p = path.join(topicsDir, `${t}.md`);
-    if (fs.existsSync(p)) existing += `\n===== 기존 주제 노트: ${t} =====\n` + bodyOf(fs.readFileSync(p, 'utf8')) + '\n';
+    if (!fs.existsSync(p)) continue;
+    const body = bodyOf(fs.readFileSync(p, 'utf8'));
+    existing += `\n===== 기존 주제 노트: ${t} =====\n` + body + '\n';
+    for (const e of splitEntries(body)) {
+      const links = Array.from(e.body.matchAll(/\[\[([^\]]+)\]\]/g)).map(m => m[1]);
+      const rec = { topic: t, title: e.title, body: stripLinks(e.body), links };
+      if (prior.has(keyOf(e.title))) continue;
+      prior.set(keyOf(e.title), rec);
+      priorOrder.push(rec);
+    }
   }
 
   const slots = [];
@@ -142,6 +157,11 @@ function main() {
   // 슬롯 번호를 앞에서부터 다시 매긴다(S1이 가장 오래된 것)
   slots.forEach((s, i) => { const id = 'S' + (i + 1); s.block = s.block.replace(`[${s.id}]`, `[${id}]`); s.id = id; });
   const slotMap = new Map(slots.map(s => [s.id, s]));
+  // 근거 링크 — 이어받은 항목은 원래 링크를, 새 항목은 인용한 슬롯의 실제 파일명을 쓴다.
+  const linksOf = (e) => (e.links && e.links.length
+    ? e.links
+    : e.slots.map(id => slotMap.get(id).file.replace(/\.md$/, ''))
+  ).map(n => `[[${n}]]`).join(' ');
   const input = existing + slots.map(s => s.block).join('');
   log(`[작성 시작] 새 노트 ${slots.length}/${fresh.length}개, 기존 주제 ${existing ? '있음' : '없음'}, 입력 ${input.length}자`);
 
@@ -195,13 +215,32 @@ function main() {
       }
       if (ghost) log(`입력에 없는 슬롯 인용 ${ghost}건 제거`);
 
+      // ── 이어받은 항목 표시 ──────────────────────────────────────────
+      // 기존 확정 항목과 본문이 그대로면 새로 주장한 것이 아니다. 검증하지 않고
+      // 원래 근거 링크를 되돌려 준다. 손댄 항목만 검증 대상으로 남는다.
+      // 이어받기로 보는 두 경우:
+      //  · 본문이 그대로다 — 새로 주장한 것이 없다
+      //  · 인용할 슬롯이 하나도 없다 — 근거가 된 옛 노트가 이번 입력에 없어 인용할 수가 없다
+      //    (문구를 조금 손댔더라도 새 근거를 댄 것이 아니므로 옛 본문을 그대로 유지한다)
+      // 본문이 바뀌고 슬롯도 댔다면 새 주장이다. 그건 검증 대상으로 남긴다.
+      let carried = 0;
+      for (const e of entries) {
+        const p = prior.get(keyOf(e.title));
+        if (!p) continue;
+        if (normBody(p.body) === normBody(e.body) || !e.slots.length) {
+          e.carried = true; e.body = p.body; e.links = p.links; carried++;
+        }
+      }
+      if (carried) log(`기존 확정 항목 ${carried}건 그대로 이어받음 — 재검증 면제`);
+
       verify(entries, round, feedback);
     });
   }
 
   // ── 검증: 작성과 분리된 호출로 주장과 원문을 대조한다 ──────────────────
   function verify(entries, round, prevFeedback) {
-    const targets = entries.filter(e => e.slots.length);   // 근거 없는 항목은 아래에서 미확정 처리
+    // 이어받은 항목(e.carried)은 이미 확정된 것이라 다시 판정하지 않는다.
+    const targets = entries.filter(e => !e.carried && e.slots.length);   // 근거 없는 항목은 아래에서 미확정 처리
     if (!targets.length) return save(entries, [], round);
 
     // 검증 입력: 항목 + 그 항목이 인용한 원문만. 전체를 다시 넣지 않는다.
@@ -256,9 +295,33 @@ function main() {
     TOPICS.forEach(t => confirmed[t] = []);
 
     for (const e of entries) {
+      if (e.carried) { confirmed[e.topic].push(e); continue; }
       if (!e.slots.length) { unverified.push({ ...e, why: '근거 없음' }); continue; }
       if (failSet.has(e.vid)) { unverified.push({ ...e, why: '원문 대조 실패' }); continue; }
       confirmed[e.topic].push(e);
+    }
+
+    // ── 삭제 금지 안전망 ────────────────────────────────────────────────
+    // 이미 확정됐던 항목이 이번 회차 확정본에 없으면(모델이 빠뜨렸든, 손대서 반려됐든)
+    // 옛 본문을 그대로 되살린다. 손댄 판본은 미확정에 남아 다음 회차에 다시 검토된다.
+    // 새로 쓴 것을 확정하지 못하는 것과 이미 쌓인 지식을 잃는 것은 다른 문제다.
+    const inConfirmed = new Set();
+    for (const t of TOPICS) for (const e of confirmed[t]) inConfirmed.add(keyOf(e.title));
+    let restored = 0;
+    for (const p of priorOrder) {
+      if (inConfirmed.has(keyOf(p.title))) continue;
+      confirmed[p.topic].push({ topic: p.topic, title: p.title, body: p.body, slots: [], links: p.links, carried: true });
+      inConfirmed.add(keyOf(p.title));
+      restored++;
+    }
+    if (restored) log(`확정본에서 빠진 기존 항목 ${restored}건 복원 — 지식 유실 방지`);
+
+    // 기존 노트에 있던 순서를 유지하고, 새 항목은 뒤에 붙인다.
+    const priorIdx = new Map(priorOrder.map((p, i) => [keyOf(p.title), i]));
+    for (const t of TOPICS) {
+      confirmed[t] = confirmed[t]
+        .map((e, i) => ({ e, k: priorIdx.has(keyOf(e.title)) ? priorIdx.get(keyOf(e.title)) : 1e6 + i }))
+        .sort((a, b) => a.k - b.k).map(x => x.e);
     }
 
     let wrote = 0;
@@ -271,7 +334,7 @@ function main() {
       const head = ['---', 'type: topic-note', `topic: ${t}`, 'stage: 2차증류', `updated: ${now}`,
         `entries: ${confirmed[t].length}`, `verified: auto`, '---', '', `# ${t}`, ''].join('\n');
       const body = confirmed[t].map(e =>
-        `## ${e.title}\n${e.body}\n${e.slots.map(id => `[[${slotMap.get(id).file.replace(/\.md$/, '')}]]`).join(' ')}\n`
+        `## ${e.title}\n${e.body}\n${linksOf(e)}\n`
       ).join('\n');
       fs.writeFileSync(p, head + body);
       wrote++;
@@ -294,12 +357,18 @@ function main() {
     state.done = Array.from(new Set([...(state.done || []), ...slots.map(s => s.file)]));
     state.lastRun = now;
     writeState(state);
-    log(`2차 증류 완료 — 주제 ${wrote}개 갱신, 확정 ${entries.length - unverified.length}건, 미확정 ${unverified.length}건, 노트 ${slots.length}개 처리 (작성 ${round}회차)`);
+    const total = TOPICS.reduce((n, t) => n + confirmed[t].length, 0);
+    log(`2차 증류 완료 — 주제 ${wrote}개 갱신, 확정 ${total}건(이어받음·복원 포함), 미확정 ${unverified.length}건, 노트 ${slots.length}개 처리 (작성 ${round}회차)`);
     releaseLock();
   }
 }
 
 // ── 파싱 도우미 ────────────────────────────────────────────────────────
+// 제목 대조용 키 — 앞 번호·기호·공백 차이로 같은 항목을 다른 항목으로 보지 않게 한다.
+const keyOf = (s) => String(s).replace(/^\s*\d+[.)]\s*/, '').replace(/[\s`"'*_()（）\[\]:：,.·—-]/g, '').toLowerCase();
+const normBody = (s) => String(s).replace(/\s+/g, ' ').trim();
+const stripLinks = (s) => String(s).replace(/\[\[[^\]]*\]\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+
 function bodyOf(raw) {   // 프런트매터·제목·안내문을 걷어낸 본문만. 회차마다 머리말이 겹치는 것을 막는다.
   let t = raw.replace(/^---[\s\S]*?\n---\n?/, '');
   const i = t.search(/^##\s/m);
